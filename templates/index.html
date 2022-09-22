@@ -1,0 +1,123 @@
+<html>
+	<head>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Merriweather+Sans:wght@300&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="{{ url_for('static',filename='styles/index.css') }}">
+	<title>{{title}}</title>
+	<script>
+	var base_url = window.location.origin;
+	function getCurTimes(){
+		const url = base_url + "/getTimes"
+		fetch(url)
+		.then(response => response.json())
+		.then(json => {
+			var tstring = ""
+			for(var key in json){
+				tstring = tstring + json[key] + ", "
+			}
+			document.getElementById("curft").innerHTML = tstring
+	})
+	}
+	function getReading(){
+		const url = base_url + "/readDistance"
+		fetch(url)
+		.then(response=> response.json())
+		.then(json => {
+			var tstring = json[0]
+			document.getElementById("foodremaining").innerHTML = tstring
+		})
+	}
+	</script>
+	<meta name="viewport" content="width=device-width">
+	</head>
+	<body onload="getCurTimes();getReading()">
+		<div class="navbar">
+			<ul class="navbar-items">
+				<li class="nav-link"><a href="{{ url_for('home') }}">Home</a></li>
+				<li class="nav-link"><a href="{{ url_for('viewLog') }}">Logs</a></li>
+				<li class="nav-link"><a href="{{ url_for('logout') }}">Logout</a></li>
+			</ul>
+		</div>
+		<div class="mainContainer">
+		<h1>Feed my cat web application</h1>
+		</br>
+		<h2>Current feed times: </h2><p id=curft></p>
+		<label for="ft1">Feeding time 1:</label>
+		<input type="time" id="ft1" name="ft2" required>
+		<button onclick="settime(1)" id="fb2" class="fb">Set feeding time 1</button>
+		</br>
+		<label for="ft2">Feeding time 2:</label>
+		<input type="time" id="ft2" name="ft2" required>
+		<button onclick="settime(2)" id="fb2" class="fb">Set feeding time 2</button>
+		</br>
+		<h2>Food remaining: </h2><p id="foodremaining"></p>
+	
+		<h2>Click to activate feeder</h2>
+		<div class="slidecontainer">
+			<input type="range" min="1" max="3" value="2" class="slider" id="feedSlider">
+		</div>
+		<span>Size:&nbsp</span><span id="f"> Regular feed</span><br>
+		<button onclick="feedCat()" id="feedbutton" >Feed my cat!</button>
+		</div>
+	</body>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
+	<script>
+		var slider=document.getElementById("feedSlider");
+		var valueDisplay=document.getElementById("f");
+		slider.oninput = function(){
+			if(this.value == 1){valueDisplay.innerHTML="Small feed"}
+			else if(this.value == 2){valueDisplay.innerHTML="Regular feed"}
+			else if(this.value == 3){valueDisplay.innerHTML="Large feed"}
+		}
+
+		var base_url = window.location.origin;
+		function feedCat() {
+			var sliderVal=document.getElementById("feedSlider").value
+			var timeconst = "1"
+			if(sliderVal == 1){timeconst=".6"}
+			else if(sliderVal == 2){timeconst="1"}
+			else if(sliderVal == 3){timeconst="1.4"}
+
+			console.log("Feed triggered with size "+timeconst);
+			$.ajax({
+				type:"POST",
+				url:"{{url_for('manualFeed')}}",
+				data:{"timeconst":timeconst}
+				})
+			
+			x = document.getElementById("feedbutton")
+			x.disabled = true;
+			x.style.opacity = ".25";
+			
+			setTimeout(()=> {x.disabled = false; x.style.opacity = "1";},3000);
+		}
+		function settime(t){
+			var data
+			if(t==1){
+				data = document.getElementById("ft1").value
+			}
+			else if(t==2){
+				data = document.getElementById("ft2").value
+			}
+			$.ajax({
+				type:'POST',
+				url:"{{ url_for('setTime') }}",
+				data:{"slot":t,"time":data}
+			})
+			var l = document.getElementsByClassName("fb")
+			for(var i = 0; i < l.length; i++){
+				l[i].disabled = true;
+				l[i].style.opacity = "0.25";
+			}
+			setTimeout(()=>{
+				getCurTimes();
+				for(var i = 0; i<l.length; i++){
+					l[i].disabled = false;
+					l[i].style.opacity = "1";
+				}
+			},1000);
+		}
+	</script>
+</html>

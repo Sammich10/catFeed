@@ -1,0 +1,45 @@
+body{
+	background: rgb(7,76,108);	
+	font-family:'Merriweather Sans', sans-serif;
+}
+.login-container{
+	background-color:white;
+	text-align:center;
+	width:35%;
+	min-height:400px;
+	margin-left:auto;
+	margin-right:auto;
+	margin-top:25vh;
+	border: 2px solid black
+}
+h1{
+	font-size:24pt;
+	font-size:5vh;
+	margin-top:20px;
+	margin-bottom:20px;
+}
+form{
+	height:100px;
+}
+input{
+	height:30px;
+	margin-top:15px;
+}
+.btn{
+	margin-top:90px;
+	height:60px;
+	width:200px;
+	font-size:20pt;
+	color: white;
+	background-color:rgb(96,142,255);
+	border:1px solid lightblue;
+	opacity:1;
+	border-radius:2px;
+	transition:ease-out .35s;
+}
+.btn:hover{
+	opacity:.8;
+	border-radius:15px;
+	transition:ease-in .35s;
+}
+

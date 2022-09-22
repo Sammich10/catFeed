@@ -1,0 +1,181 @@
+body {
+	font-family: 'Merriweather Sans', sans-serif;
+	min-height:100%;
+	background: rgb(7,76,108);
+	margin:auto;	
+}
+.navbar{
+	height:5vh;
+}
+.navbar-items{
+	display:flex;
+	flex-direction:row;
+	width:auto;
+	justify-content: center;
+	margin-top:2.5vh;
+}
+.nav-link{
+	width:12vw;
+	text-decoration:None;
+	list-style-type:none;
+	font-size:1.75vh;
+}
+.nav-link a{
+	text-decoration: none;
+	color:white;
+	font-weight:bold;
+	transition: ease .5s;
+	opacity:1;
+}
+.nav-link a:hover{
+	transition: ease .25s;
+	opacity: .7;
+	transform: scale(.9);
+}
+
+.mainContainer{
+	margin-top: 100px;
+	text-align: center;
+	justify-content:center;
+	width:65%;
+	margin:auto;
+	min-height: 50%;
+	padding: 50px;
+	border: 2px solid black;
+	background-color: white;
+}
+h1{
+	margin:10px;
+	font-size:48pt;
+	font-size:5vh;
+}
+h2{
+	margin:10px;
+	font-size: 32pt;
+	font-size:4vh
+	}
+#curft{
+	font-size:16pt;
+	font-size:3vh;
+	margin-bottom: 20px;
+}
+#foodremaining{
+	font-size:16pt;
+	font-size:3vh
+}
+.fb{
+	height: 30px;
+	margin: 10px;
+	width: auto;
+	border: none;
+	background: rgb(96,142,255);
+	color:white;
+	border:1px solid lightblue;
+	font-weight: bold;
+}
+label{
+	font-size: 16pt;
+	font-weight: bold;
+	margin-bottom:10px;
+	margin-right: 20px;
+}
+.slidecontainer{
+	width:50%;
+	margin-left:auto;
+	margin-right:auto;
+	margin-top:10px;
+	margin-bottom:10px;
+}
+#feedslider{
+	width:100%;
+	transition: ease-in-out .2s;
+	outline:none;
+	height:35px;
+	opacity:.7;
+}
+#feedslider:hover{
+	opacity:1;
+}
+#feedbutton{
+	height:100px;
+	width:250px;
+	background: rgb(96,142,255);
+	border:none;
+	margin: 15px;
+	color:white;
+	border:1px solid lightblue;
+	font-weight:bold;
+	font-size:20pt;
+	height:8vh;
+	width:18vw;
+	font-size:3vh;
+}
+button{
+	opacity:1;
+	transition:ease .5s;
+	border-radius:2px;
+}
+button:hover{
+	opacity:.8;
+	border-radius:20px;
+	transition:ease .5s;
+}
+
+@media (max-width:960px){
+	
+	.mainContainer{
+		width:90%;
+		height:100%
+	}
+	#feedbutton{
+		width:80%;
+		font-size:20pt;
+		font-size:4.5vh;
+	}
+
+	h1{
+		margin:10px;
+		font-size:24pt;
+		font-size:3vh;
+	}
+	h2{
+		margin:10px;
+		font-size: 20pt;
+		font-size:2.25vh
+		}
+	#curft{
+		font-size:16pt;
+		font-size:2vh;
+		margin-bottom: 20px;
+	}
+	#foodremaining{
+		font-size:16pt;
+		font-size:2vh
+	}
+	.fb{
+		height: 3vh;
+		font-size:2vh;
+		margin: 10px;
+		margin-top:2vh;
+		margin-bottom:2vh;
+		width: auto;
+		border: none;
+		background: rgb(96,142,255);
+		color:white;
+		border:1px solid lightblue;
+		font-weight: bold;
+	}
+	.slidecontainer{
+		width:75%;
+	}
+	span{
+		font-size:2vh;
+	}
+	input{
+		height:3vh;
+	}
+	label{
+		height:3vh;
+	}
+			
+}
