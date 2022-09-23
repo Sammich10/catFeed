@@ -39,7 +39,7 @@ and add a line that runs the update.py file on boot.
 
 ## Project Status
 The project as it stands is fully functional, and I would consider it to be in a decent 1.0 state. I do plan to add more features in time
-_in progress_
+<br />_in progress_
 
 
 
