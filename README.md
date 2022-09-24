@@ -1,5 +1,5 @@
 # Automated Cat Feeder Using Raspberry Pi and Flask
-> Automatically feed your cat, schedule up to 3 daily feeds, and track feedings over time!
+> Automatically feed your cat, schedule up to 2 daily feeds, and track feedings over time!
 > More info [_here_](https://www.sammichelsen.tech/cat_feeder/catfeederplus.html).
 
 ## Table of Contents
@@ -24,7 +24,7 @@ This project was originally born as a group project for an embedded systems clas
 
 ## Features
 - Simple, user friendly web application UI to program the feeder and check its status
-- Schedule up to 3 daily feeds
+- Schedule up to 2 daily feeds
 - Trigger a manual feed
 - Track feeds 
 - View scheduled feeds and the status of the food hopper on LCD screen
