@@ -54,4 +54,6 @@ h1{
 	font-size:48pt;
 	font-size:5vh;
 }
-
+table, th, td {
+	border: 1px solid black;
+  }
