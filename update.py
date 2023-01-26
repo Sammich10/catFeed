@@ -17,7 +17,7 @@ def updateScreen(feedsarray):
     distance = read_distance() * 100
     percentfull = round((100-(distance * 100 / 12)),0)
     status = ""
-    if(distance<=6):
+    if(distance<=6 or distance > 1000):
         status="Full"
     elif(distance>6 and distance <=9):
         status="~Half"

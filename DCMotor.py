@@ -4,7 +4,6 @@ import pigpio
 
 rpi = pigpio.pi()
 
-
 class DCMotor:
     pin1 = 23
     pin2 = 25

@@ -9,7 +9,7 @@ percentfull = round((100-(distance*100/12)),0)
 
 print(percentfull)
 
-if(distance <= 7):
+if(distance <= 7 or distance > 1000):
     print("Full")
 elif(distance > 6 and distance < 9):
     print("about half")

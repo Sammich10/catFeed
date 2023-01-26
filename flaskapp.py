@@ -104,7 +104,7 @@ def manualFeed():
 def get_dist():
     distance=read_distance()*100
     s = ""
-    if(distance<=6):
+    if(distance<=6 or distance > 1000):
         s="Full"
     elif(distance>6 and distance <=9):
         s="~Half"
@@ -157,6 +157,7 @@ def getTimes():
         return jsonify(jsonResp)
     return "not a get"
 @app.route("/getLogs", methods=['GET'])
+
 def getLogs():
     return('',204)
     
