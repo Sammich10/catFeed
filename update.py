@@ -39,16 +39,15 @@ def updateScreen(feedsarray):
     screen.setCursor(0,0)
     w=now.strftime("%I:%M %p") + " | " + status
     screen.write(w)
-    c = 1
-    for y in feedsarray:
-        screen.setCursor(c,0)
-        y = y.strip()
-        t = datetime.strptime(y,"%H:%M")
-        t = t.strftime("%I:%M %p")
-        s = "Feed " + str(c) + ": " + str(t)
-        screen.write(s)
-        c = c+1
-    return
+    for c,y in enumerate(feedsarray):
+        if(y != '\n' and y != ''):
+            screen.setCursor(c+1,0)
+            y = y.strip()
+            t = datetime.strptime(y,"%H:%M")
+            t = t.strftime("%I:%M %p")
+            s = "Feed " + str(c+1) + ": " + str(t)
+            screen.write(s)
+        return
 
 def feed(time):
     print("Feed time!")
@@ -93,19 +92,20 @@ def thread_checkFeedTimes(event):
     print("thread 1 exited while loop")
 
 def updateArray():
+    feedsarray.clear()
     i = 0
     feedsfile = open(BASE_DIR + "/feedtimes.txt","r")
-    for x in feedsfile:
-        if(i>2):
-            break
-        i = i + 1
-        if x != "\n":
+    for i,x in enumerate(feedsfile):
+        try:
+            feedsarray[i] = x
+        except:
             feedsarray.append(x)
 
 def thread_updateFeedsArray(event):
     #print("screen update thread started")
     while(1):
         print("updating screen")
+        print(feedsarray)
         event.wait()
         updateArray()
         updateScreen(feedsarray)
@@ -127,6 +127,16 @@ if(len(sys.argv)>1):
 if __name__ == '__main__':
     event = threading.Event()
     try:
+        feedsfile = open(BASE_DIR + "/feedtimes.txt","r")
+        i=0 
+        for x in feedsfile:
+            if(i>2):
+                break
+            i = i + 1
+            if x != "\n":
+                feedsarray.append(x)
+
+ 
         t1=threading.Thread(target=thread_updateFeedsArray,args=(event,))
         t2=threading.Thread(target=thread_checkFeedTimes,args=(event,))
         t1.start()
