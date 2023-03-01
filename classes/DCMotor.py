@@ -13,10 +13,10 @@ class DCMotor:
     def dispense(self,t):
         rpi.write(self.pin1, 1)
         rpi.write(self.pin2, 0)
-        time.sleep(t)
+        time.sleep(t / (10/3))
         rpi.write(self.pin1,0)
         rpi.write(self.pin2,1)
-        time.sleep(.2)
+        time.sleep((3/10))
         rpi.write(self.pin2,0)
 
 

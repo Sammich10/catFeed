@@ -76,9 +76,9 @@
 		function feedCat() {
 			var sliderVal=document.getElementById("feedSlider").value
 			var timeconst = "1"
-			if(sliderVal == 1){timeconst=".6"}
-			else if(sliderVal == 2){timeconst="1"}
-			else if(sliderVal == 3){timeconst="1.4"}
+			if(sliderVal == 1){timeconst="1"}
+			else if(sliderVal == 2){timeconst="2"}
+			else if(sliderVal == 3){timeconst="3"}
 
 			console.log("Feed triggered with size "+timeconst);
 			$.ajax({

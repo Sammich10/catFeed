@@ -10,8 +10,8 @@ import threading
 import os
 import sqlite3 as sql
 from datetime import datetime, timedelta
-from distanceSensor import read_distance
-from DCMotor import DCMotor
+from classes.distanceSensor import read_distance
+from classes.DCMotor import DCMotor
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 db_path = os.path.join(BASE_DIR, "catFeed.sqlite3")

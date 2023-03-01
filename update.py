@@ -1,16 +1,24 @@
-from charLCD import charLCD
+#This python script runs when the system starts up and
+#continupusly checks the feeds file and is responsible for 
+#automatically triggering feeds
 from datetime import datetime
 import time, traceback
 import threading
-from DCMotor import DCMotor
-from distanceSensor import read_distance
+from classes.DCMotor import DCMotor
+from classes.distanceSensor import read_distance
+from classes.charLCD import charLCD
 import os
 import sys
 import sqlite3 as sql
+
 screen = charLCD()
 motor = DCMotor()
+FEED_SIZE = 10
+
 feedsarray = []
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 db_path = os.path.join(BASE_DIR,"catFeed.sqlite3")
 
 def updateScreen(feedsarray):
@@ -42,30 +50,47 @@ def updateScreen(feedsarray):
         c = c+1
     return
 
+def feed(time):
+    print("Feed time!")
+    date = datetime.now().strftime("%m/%d/%Y")
+    try:
+        conn = sql.connect(db_path)
+        cur = conn.cursor()
+    except sqlite3.Error as error:
+        print("sqlite error while updating log")
+        print(error)
+    cur.execute("INSERT INTO feedlog (time,date,size,type) VALUES (?,?,?,?)",(time,date,'regular','automatic'))
+    conn.commit()
+    conn.close()
+    motor.dispense(FEED_SIZE)
+    screen.clear()
+    screen.setCursor(1,0)
+    screen.write("   Feeding time!")
+    screen.setCursor(2,0)
+    screen.write("        >x<")
+    return
+
 def checkFeedTime(feedsarray):
     rightnow = datetime.now().strftime("%H:%M")
-    date = datetime.now().strftime("%m/%d/%Y")
     for y in feedsarray:
         y=y.strip()
         if(y == rightnow):
-            print("Feed time!")
-            try:
-                conn = sql.connect(db_path)
-                cur = conn.cursor()
-            except sqlite3.Error as error:
-                print("sqlite error while updating log")
-                print(error)
-            cur.execute("INSERT INTO feedlog (time,date,size,type) VALUES (?,?,?,?)",(rightnow,date,'regular','automatic'))
-            conn.commit()
-            conn.close()
-            motor.dispense(1.25)
-            screen.clear()
-            screen.setCursor(1,0)
-            screen.write("   Feeding time!")
-            screen.setCursor(2,0)
-            screen.write("        >x<")
+            feed(rightnow)
+            return True
+    return False
+
+def thread_checkFeedTimes(event):
+    #print("Feed time checking thread started")
+    event.set()
+    while(1):
+        print("checking feed time") 
+        if(checkFeedTime(feedsarray)):
+            event.clear()
             time.sleep(60)
-    return
+            event.set()
+        
+        time.sleep(15)
+    print("thread 1 exited while loop")
 
 def updateArray():
     i = 0
@@ -76,6 +101,17 @@ def updateArray():
         i = i + 1
         if x != "\n":
             feedsarray.append(x)
+
+def thread_updateFeedsArray(event):
+    #print("screen update thread started")
+    while(1):
+        print("updating screen")
+        event.wait()
+        updateArray()
+        updateScreen(feedsarray)
+        time.sleep(5)
+    print("thread 2 exited while loop")
+
 starttime = time.time()
 #test automatic feeding
 if(len(sys.argv)>1):
@@ -88,12 +124,15 @@ if(len(sys.argv)>1):
        print("test complete")
        exit(0)
 
-while(1):
+if __name__ == '__main__':
+    event = threading.Event()
     try:
-        updateArray()
-        updateScreen(feedsarray)
-        checkFeedTime(feedsarray)
-        feedsarray.clear()
-        time.sleep(60.0 - ((time.time()-starttime)%60))
+        t1=threading.Thread(target=thread_updateFeedsArray,args=(event,))
+        t2=threading.Thread(target=thread_checkFeedTimes,args=(event,))
+        t1.start()
+        t2.start()
+
     except KeyboardInterrupt:
+        t1.stop()
+        t2.stop()
         exit(0)
