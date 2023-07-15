@@ -13,6 +13,7 @@ body {
 	width:auto;
 	justify-content: center;
 	margin-top:2.5vh;
+	text-align: center;
 }
 .nav-link{
 	width:12vw;
@@ -43,6 +44,7 @@ body {
 	padding: 50px;
 	border: 2px solid black;
 	background-color: white;
+	border-radius: 10px;
 }
 #table {
 	margin-left:auto;

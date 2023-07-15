@@ -2,13 +2,13 @@ DROP TABLE IF EXISTS feedtimes;
 DROP TABLE IF EXISTS feedlog;
 DROP TABLE IF EXISTS users;
 
-CREATE TABLE feedtimes(
+CREATE TABLE FEED_TIMES(
 	"id" INTEGER PRIMARY KEY AUTOINCREMENT,
 	"time" TEXT,
 	"size" TEXT
 );
 
-CREATE TABLE feedlog(
+CREATE TABLE FEED_LOG(
 	"id" INTEGER PRIMARY KEY AUTOINCREMENT,
 	"time" TEXT,
 	"date" TEXT,
@@ -16,10 +16,10 @@ CREATE TABLE feedlog(
 	"type" TEXT
 );
 
-CREATE TABLE users(
+CREATE TABLE USER_INFO(
 	"user_id" INTEGER PRIMARY KEY AUTOINCREMENT,
 	"email" TEXT,
 	"password" TEXT
 );
 
-INSERT INTO feedtimes ("id") VALUES (1),(2)
+INSERT INTO feedtimes ("id") VALUES (1),(2),(3)

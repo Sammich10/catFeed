@@ -71,7 +71,7 @@ def viewLog():
     try:
         conn=sql.connect(db_path)
         cur=conn.cursor()
-        logData = conn.execute('SELECT * FROM feedlog').fetchall()
+        logData = conn.execute('SELECT * FROM feedlog ORDER BY id DESC').fetchall()
         conn.close()
         print(logData)
         return render_template('viewLog.html', title="Log View", logData = logData)
@@ -85,9 +85,10 @@ def manualFeed():
     if request.method  == 'POST':
         rightnow=datetime.now().strftime("%H:%M")
         date = datetime.now().strftime("%m/%d/%Y")
-        temp = request.form.get('timeconst')
-        temp = float(temp)
-        dispenseFood(temp)
+        #temp = request.form.get('timeconst')
+        #temp = float(temp)
+        #dispenseFood(2*temp)
+        dispenseFood(2)
         try:
             conn=sql.connect(db_path)
             cur=conn.cursor()
@@ -104,13 +105,13 @@ def manualFeed():
 def get_dist():
     distance=read_distance()*100
     s = ""
-    if(distance<=6 or distance > 1000):
+    if(distance<=8 or distance > 1000):
         s="Full"
-    elif(distance>6 and distance <=9):
+    elif(distance>8 and distance <=12):
         s="~Half"
-    elif(distance>9 and distance<11):
+    elif(distance>12 and distance<14):
         s="Low"
-    elif(distance >=11):
+    elif(distance >=14):
         s="Critical"
     jsonResp={0:s}
     return jsonify(jsonResp)
@@ -123,12 +124,16 @@ def setTime():
             conn = sql.connect(db_path)
             cur = conn.cursor()
             data = open(BASE_DIR + "/feedtimes.txt","r").readlines()
-            if request.form.get('slot') == '1':
+            feed_slot = request.form.get('slot')
+            if feed_slot == '1':
                 data[0] = request.form.get('time') + "\n"
-                cur.execute(sql_insert_query,(request.form.get('time'), 'r',1))
-            elif request.form.get('slot') == '2':
+                cur.execute(sql_insert_query,(request.form.get('time'), 'r', 1))
+            elif feed_slot == '2':
                 data[1] = request.form.get('time') + "\n"
-                cur.execute(sql_insert_query,(request.form.get('time'), 'r',1))
+                cur.execute(sql_insert_query,(request.form.get('time'), 'r', 1))
+            elif feed_slot == '3':
+                data[2] = request.form.get('time') + "\n"
+                cur.execute(sql_insert_query,(request.form.get('time'), 'r', 1))
             conn.commit()
             conn.close()
             with open(BASE_DIR + "/feedtimes.txt","w") as file:

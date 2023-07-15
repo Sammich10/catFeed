@@ -51,19 +51,26 @@
 		<input type="time" id="ft2" name="ft2" required>
 		<button onclick="settime(2)" id="fb2" class="fb">Set feeding time 2</button>
 		</br>
+		<label for="ft3">Feeding time 3:</label>
+		<input type="time" id="ft3" name="ft3" required>
+		<button onclick="settime(3)" id="fb3" class="fb">Set feeding time 3</button>
+		</br>	
 		<h2>Food remaining: </h2><p id="foodremaining"></p>
 	
 		<h2>Click to activate feeder</h2>
+		<!--
 		<div class="slidecontainer">
 			<input type="range" min="1" max="3" value="2" class="slider" id="feedSlider">
 		</div>
 		<span>Size:&nbsp</span><span id="f"> Regular feed</span><br>
+		-->
 		<button onclick="feedCat()" id="feedbutton" >Feed my cat!</button>
 		</div>
 	</body>
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 
 	<script>
+		/*
 		var slider=document.getElementById("feedSlider");
 		var valueDisplay=document.getElementById("f");
 		slider.oninput = function(){
@@ -71,15 +78,18 @@
 			else if(this.value == 2){valueDisplay.innerHTML="Regular feed"}
 			else if(this.value == 3){valueDisplay.innerHTML="Large feed"}
 		}
+	       	*/
 
 		var base_url = window.location.origin;
 		function feedCat() {
+			//Removed slider due to new design having a fixed size bowl, but left vestigial code incase I want to add it back later...
+			/*	
 			var sliderVal=document.getElementById("feedSlider").value
-			var timeconst = "1"
-			if(sliderVal == 1){timeconst="1"}
+	       		if(sliderVal == 1){timeconst="1"}
 			else if(sliderVal == 2){timeconst="2"}
 			else if(sliderVal == 3){timeconst="3"}
-
+			*/
+			var timeconst = "1"
 			console.log("Feed triggered with size "+timeconst);
 			$.ajax({
 				type:"POST",
@@ -101,6 +111,9 @@
 			else if(t==2){
 				data = document.getElementById("ft2").value
 			}
+			else if(t==3){
+				data = document.getElementById("ft3").value
+			}
 			$.ajax({
 				type:'POST',
 				url:"{{ url_for('setTime') }}",
@@ -109,7 +122,7 @@
 			var l = document.getElementsByClassName("fb")
 			for(var i = 0; i < l.length; i++){
 				l[i].disabled = true;
-				l[i].style.opacity = "0.25";
+				l[i].style.opacity = "0.5";
 			}
 			setTimeout(()=>{
 				getCurTimes();
