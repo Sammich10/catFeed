@@ -1,14 +1,16 @@
-import atexit
-from crypt import methods
-import string
+# Includes
 from turtle import delay
 from flask import Flask, render_template, Response, request, jsonify, redirect, url_for, session
 from functools import wraps
 from time import time,sleep
+from crypt import methods
+import atexit
+import string
 import time
 import threading
 import os
 import sqlite3 as sql
+# Classes
 from datetime import datetime, timedelta
 from classes.distanceSensor import read_distance
 from classes.DCMotor import DCMotor

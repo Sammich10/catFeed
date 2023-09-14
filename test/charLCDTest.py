@@ -1,10 +1,10 @@
-from charLCD import charLCD
+from charLCD import charLCDScreen
 import time
 import random
-screen = charLCD()
+screen = charLCDScreen()
 
 screen.clear()
-screen.startUpdaterThread()
+screen.startScreenUpdater()
 screen.writeRow(3,"TESTING")
 
 time.sleep(2)
