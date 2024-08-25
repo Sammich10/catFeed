@@ -9,5 +9,5 @@ if(len(sys.argv) < 2 or len(sys.argv) > 2):
 
 t = int(sys.argv[1])
 
-motor.dispense(t)
+motor.forward(t)
 

@@ -2,44 +2,47 @@ body{
 	background: rgb(7,76,108);	
 	font-family:'Merriweather Sans', sans-serif;
 }
-.login-container{
+.form-container{
 	background-color:white;
 	text-align:center;
-	width:35%;
-	min-height:400px;
+	width:40%;
+	height:40%;
 	margin-left:auto;
 	margin-right:auto;
-	margin-top:25vh;
-	border: 2px solid black
+	margin-top:20vh;
+	border: 2px solid black;
+	border-radius: 6px;
 }
 h1{
-	font-size:24pt;
-	font-size:5vh;
+	font-size:2vw;
 	margin-top:20px;
 	margin-bottom:20px;
 }
 form{
-	height:100px;
+	width: 60%;
+    margin-left: auto;
+    margin-right: auto;
 }
 input{
 	height:30px;
 	margin-top:15px;
+	width: 60%;
+	font-size: 1.5vw;
 }
 .btn{
-	margin-top:90px;
-	height:60px;
-	width:200px;
-	font-size:20pt;
-	color: white;
+	font-size:2.4vw;
+    height: 3.2vw;
+	width: auto;
+	color:white;
 	background-color:rgb(96,142,255);
 	border:1px solid lightblue;
 	opacity:1;
-	border-radius:2px;
+	border-radius:8px;
 	transition:ease-out .35s;
 }
 .btn:hover{
 	opacity:.8;
-	border-radius:15px;
+	border-radius:16px;
 	transition:ease-in .35s;
 }
 
