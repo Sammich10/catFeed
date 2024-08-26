@@ -1,15 +1,24 @@
+# Include flask app and database
 from appMain import app, db
+# Import the flask app and associated libraries 
 from flask import Flask, render_template, Response, request, jsonify, redirect, url_for, session
 from functools import wraps
+from crypt import methods
+# Import database libraries
 from flask_sqlalchemy import SQLAlchemy
 import sqlite3 as sql
+# Import system libraries
 import time
 import threading
 import os
 import sys
-from crypt import methods
 import atexit
+# Database models
 from classes.models import Owner
+# Cat feeder control classes
+from appMain.feederControl import lcd
+from appMain.feederControl import motor
+from appMain.feederControl import dsens
 
 # Decorator function to check if user is logged in by the presence of the 'logged-in' key in the session
 def login_required(f):
@@ -32,21 +41,6 @@ def root():
         return redirect(url_for('login'))
     return('',404)
 
-@app.route("/registerNewOwner", methods=['GET','POST'])
-def registerOwner():
-    error = None
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        
-    return render_template('registerOwner.html', error=error)
-
-def add_owner(username, password):
-    new_owner = Owner(username = username, password = password)
-    db.session.add(new_owner)
-    db.session.commit()
-
-# Route for the login page
 @app.route("/login", methods=['GET','POST'])
 def login():
     error=None
@@ -58,9 +52,23 @@ def login():
             return redirect(url_for('home'))
     return render_template('login.html', error=error)
 
-@app.route("/register")
+@app.route("/register", methods=['GET','POST'])
 def register():
+    errors = None
+    if request.method == 'POST':
+        username = request.form['username']
+        email = request.form['email']
+        password = request.form['password']
+        add_owner(username, email, password)
+        session['logged-in'] = True
+        return redirect(url_for('home'))
     return render_template('register.html')
+
+def add_owner(username, email, password):
+    new_owner = Owner(username = username, email = email, password = password)
+    db.session.add(new_owner)
+    db.session.commit()
+    
 # Route for logging out
 @app.route("/logout")
 @login_required
@@ -68,10 +76,12 @@ def logout():
     session.pop('logged-in',None)
     return redirect(url_for('login'))
 
-
-
 @app.route("/home", methods=['GET'])
 @login_required
 def home():
     return render_template('index.html', title="Feed my cat")
+
+# @app.route("/api/getDistance", methods=['GET'])
+# def getDistance():
+#     return jsonify(motor.getDistance())
 

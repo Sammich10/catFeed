@@ -1,7 +1,7 @@
 from charLCD import charLCD
 import sys
 
-screen = charLCD()
+screen = CharLCD()
 
 screen.initialize()
 screen.clear()

@@ -1,7 +1,7 @@
 from smbus2 import SMBus
 from time import sleep
 
-class charLCD:
+class CharLCD:
     # This class is used to control the character LCD using the Raspberry Pi's I2C interface
     # It is based on the PCF8574A I2C I/O expander
     def __init__(self, address=0x27, bus=1, width = 20, height = 4):

@@ -1,5 +1,6 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 import os
 import sys
 
@@ -12,6 +13,7 @@ app.secret_key = "\xbe\xa0\x9a\xda\xe3\xbdv]'?\xd7S]4uA\x80\xb1v3\xab\xf4s?"
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(BASE_DIR, 'catFeed.db')
 
 db = SQLAlchemy(app)
+migrate = Migrate(app, db)
 
 # Import routes after app and db are initialized
 from appMain import routes

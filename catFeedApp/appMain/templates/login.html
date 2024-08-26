@@ -16,8 +16,9 @@
 			<form action="" method="post">
 				<input type="text" placeholder="Username" name="username" value="{{request.form.username}}"><br>
 				<input type="password" placeholder="Password" name="password" value="{{request.form.password }}"><br>
-				<input class="btn btn-default" type="submit" value="Login"><br>
+				<input class="btn btn-login" type="submit" value="Login"><br>
 			</form>
+			<a class="btn btn-register" href="{{ url_for('register') }}">Register New Owner</a><br>
 			{% if error %}
 				<p class="error"><strong>Error:</strong> {{ error }}
 			{% endif %}
