@@ -1,7 +1,7 @@
 var base_url = window.location.origin;
 
 function getReading(){
-    const url = base_url + "/readDistance"
+    const url = base_url + "/api/readDistance"
     fetch(url)
     .then(response=> response.json())
     .then(json => {
