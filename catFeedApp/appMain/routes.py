@@ -81,7 +81,8 @@ def logout():
 def home():
     return render_template('index.html', title="Feed my cat")
 
-# @app.route("/api/getDistance", methods=['GET'])
-# def getDistance():
-#     return jsonify(motor.getDistance())
+@app.route("/api/getDistance", methods=['GET'])
+def getDistance():
+    distance_percent = dsens.getReading_percent()
+    return jsonify({'distance': distance_percent})
 

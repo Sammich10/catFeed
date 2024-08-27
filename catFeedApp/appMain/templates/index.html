@@ -4,22 +4,33 @@
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 	<link href="https://fonts.googleapis.com/css2?family=Merriweather+Sans:wght@300&display=swap" rel="stylesheet">
 	<link rel="stylesheet" href="{{ url_for('static',filename='styles/index.css') }}">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 	<script src="{{ url_for('static',filename='js/index.js') }}"></script>
 	<title>{{title}}</title>
 	<meta name="viewport" content="width=device-width">
 	</head>
 	<body onload="getReading()">
-		<div class="navbar">
-			<ul class="navbar-items">
-				<li class="nav-link"><a href="{{ url_for('home') }}">Home</a></li>
-				<li class="nav-link"><a href="{{ url_for('logout') }}">Logout</a></li>
-			</ul>
-		</div>
-		<div class="mainContainer">
-		<h1>Feed my cat web application</h1>
-		</br>
-		<p id="foodremaining">Food remaining: </p>
+		<div class="index-page">
+			<div class="navbar">
+				<ul class="navbar-items">
+					<li class="nav-link"><a href="{{ url_for('home') }}">Home</a></li>
+					<li class="nav-link"><a href="{{ url_for('logout') }}">Logout</a></li>
+				</ul>
+			</div>
+			<div class="mainContainer">
+				<div class="header">
+					<h1>Feed my cat web application</h1>
+				</div>
+				<div class="feeder-stats">
+					<h2>Feeder Stats</h2>
+					<p id="foodremaining">Food remaining: </p>
+					<p id="last-feed">Last time fed: </p>
+				</div>
+				<ul class="feed-times">
+					
+				</ul>
+				<div class="feeder-menu"></div>
+			</div>
 		</div>
 	</body>
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 </html>
