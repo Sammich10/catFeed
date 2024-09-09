@@ -14,3 +14,5 @@ dsens = DistanceSensor(DSENS_TRIG_GPIO, DSENS_ECHO_GPIO)
 lcd.initialize()
 # Setup the distance sensor GPIOs
 dsens.setup()
+# Setup the motor GPIOs
+motor.setup()

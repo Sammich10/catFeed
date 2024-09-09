@@ -22,11 +22,27 @@ class DistanceSensor:
         self.pi.gpio_trigger(self.trig_pin, 50, 1)
         if self.done.wait(timeout=5):
             return self.low / 58.0 / 100.0 * self.METERS_TO_MM
-
         return -1
     
     def setFull_mm(self, mm):
         self.MAX_DISTANCE = mm
+        
+    def setEmpty_mm(self, mm):
+        self.MIN_DISTANCE = mm
+        
+    def calibrate_max(self):
+        sum = 0
+        for i in range(3):
+            sum += self._read_distance_mm()
+            time.sleep(0.5)
+        self.MAX_DISTANCE = sum/3
+        
+    def calibrate_min(self):
+        sum = 0
+        for i in range(3):
+            sum += self._read_distance_mm()
+            time.sleep(0.5)
+        self.MIN_DISTANCE = sum/3
         
     def getReading_mm(self, samples=1):
         sum = 0 
@@ -60,8 +76,8 @@ class DistanceSensor:
         self.pi.set_mode(self.echo_pin, pigpio.INPUT)
         self.pi.callback(self.echo_pin, pigpio.RISING_EDGE, self._rise)
         self.pi.callback(self.echo_pin, pigpio.FALLING_EDGE, self._fall)
-        
-    MAX_DISTANCE = 14
+
+    MAX_DISTANCE = 150
     MIN_DISTANCE = 0
     METERS_TO_MM = 1000 
     R_DELAY = 0.01      # 10ms

@@ -10,26 +10,42 @@
 	<meta name="viewport" content="width=device-width">
 	</head>
 	<body onload="getReading()">
+		<p class="version-tag">Catfeed Version {{version}}</p>
 		<div class="index-page">
-			<div class="navbar">
-				<ul class="navbar-items">
-					<li class="nav-link"><a href="{{ url_for('home') }}">Home</a></li>
-					<li class="nav-link"><a href="{{ url_for('logout') }}">Logout</a></li>
-				</ul>
+			<div class="top-banner">
+				<p class="username">Welcome, {{username}}!</p>
+				<p class="info">Lask Feed: {{last_feed}}</p>
+				<p class="info">Remaining: {{food_remaining_percent}}</p>
+				<a href="{{ url_for('logout') }}">Logout</a>
 			</div>
 			<div class="mainContainer">
-				<div class="header">
-					<h1>Feed my cat web application</h1>
-				</div>
-				<div class="feeder-stats">
-					<h2>Feeder Stats</h2>
-					<p id="foodremaining">Food remaining: </p>
-					<p id="last-feed">Last time fed: </p>
-				</div>
-				<ul class="feed-times">
-					
+				<ul class = "tabs">
+					<li class = "tab-nav tabStatusNav"><a class="tab-nav-link" href="#tabContent">Feeder Status</a></li>
+					<li class = "tab-nav tabScheduleNav"><a class="tab-nav-link" href="#tabSchedule">Schedule Feeds</a></li>
+					<li class = "tab-nav tabHistoryNav"><a class="tab-nav-link" href="#tab3">Feeding History</a></li>
 				</ul>
-				<div class="feeder-menu"></div>
+				<div class="tab-content tabStatusContent" id="tabContent">
+					<!-- Feeder Status -->
+					<div class="header">
+						<h1>Feed My Cat Web Application</h1>
+					</div>
+					<div class="feeder-stats">
+						<h2>Feeder Stats</h2>
+						<p id="foodremaining">Food remaining: </p>
+						<p id="last-feed">Last time fed: </p>
+					</div>
+					<ul class="feed-times">
+						
+					</ul>
+					<div class="feeder-menu"></div>
+				</div>
+				<div class="tab-content tabScheduleContent" id="tabSchedule">
+				<!-- Schedule Feeds -->
+				</div>  
+				<div class="tab-content tabHistoryContent" id="tab3">
+					<!-- Feeding History -->
+				</div>
+
 			</div>
 		</div>
 	</body>

@@ -1,4 +1,4 @@
-from charLCD import charLCD
+from charLCD import CharLCD
 import sys
 
 screen = CharLCD()
@@ -8,4 +8,4 @@ screen.clear()
 # Check for input arguments
 if(len(sys.argv) > 1):
     print(sys.argv[1])
-    screen.writeRow(0, sys.argv[1])
+    screen.writeRow(3, sys.argv[1])

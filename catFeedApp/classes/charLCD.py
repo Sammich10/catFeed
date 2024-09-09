@@ -87,7 +87,6 @@ class CharLCD:
         if len(string) > maxLength:
             string = string[:maxLength]
         self._lcd_write_string(string)
-        self._lcd_set_cursor(0, row + 1)
         
     def writeStringToPos(self, col, row, string):
         self._lcd_set_cursor(col, row)
