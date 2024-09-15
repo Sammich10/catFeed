@@ -1,5 +1,5 @@
 # Include flask app and database
-from appMain import app, db
+from appMain.app import app, db
 # Import the flask app and associated libraries 
 from flask import Flask, render_template, Response, request, jsonify, redirect, url_for, session
 from functools import wraps
@@ -14,12 +14,13 @@ import hashlib
 import time
 import threading
 import atexit
+import cv2
+import subprocess
+import io
+from PIL import Image
 # Database models
-from classes.models import Owner
-# Cat feeder control classes
-from appMain.feederControl import lcd
-from appMain.feederControl import motor
-from appMain.feederControl import dsens
+from classes.models import Owner, Feeding, FeedTime
+from appMain.feederControl import dsens, lcd, motor, camera
 
 # Decorator function to check if user is logged in by the presence of the 'logged-in' key in the session
 def login_required(f):
@@ -30,7 +31,7 @@ def login_required(f):
             return f(*args,**kwargs)
         else:
             # If the 'logged-in' key is not present in the session, redirect the user to the login page
-            return redirect(url_for('login'), Response=302, message="You need to login first")
+            return redirect(url_for('login'), Response=302)
     return wrap
 
 # Route for the home page
@@ -39,7 +40,7 @@ def root():
     if 'logged-in' in session:
         return redirect(url_for('home'))
     else:
-        return redirect(url_for('login'), Response=302, message="Please login")
+        return redirect(url_for('login'), Response=302)
 
 @app.route("/login", methods=['GET','POST'])
 def login():
@@ -138,10 +139,131 @@ def logout():
 @app.route("/home", methods=['GET'])
 @login_required
 def home():
-    return render_template('index.html', title="Feed my cat", username=session['username'], last_feed="Unknown", food_remaining_percennt="0%", version="v2.2.1" )
+    return render_template('index.html', title="Feed my cat", username=session['username'], version="v2.2.1" )
 
 @app.route("/api/getDistance", methods=['GET'])
+@login_required
 def getDistance():
     distance_percent = dsens.getReading_percent()
+    # Round to the nearest 5%
+    distance_percent = round(distance_percent/20)*20
+    print(distance_percent)
     return jsonify({'distance': distance_percent})
+
+@app.route("/api/getLastFeed", methods=['GET'])
+@login_required
+def getLastFeed():
+    last_feed = Feeding.query.order_by(Feeding.time.desc()).first()
+    if last_feed == None:
+        last_feed = "Unknown"
+    else:
+        last_feed = str(last_feed.time)
+    print(last_feed)
+    return jsonify({'last_feed': last_feed})
+
+@app.route("/api/getFeedingTimes", methods=['GET'])
+@login_required
+def getFeedingTimes():
+    feeding_times = Feeding.query.all()
+    feeding_times_list = []
+    for feeding_time in feeding_times:
+        feeding_times_list.append((feeding_time.date, feeding_time.time, feeding_time.type)) 
+    print(feeding_times_list)
+    return jsonify({'feeding_times': feeding_times_list})
+
+@app.route("/api/getFeedTimes", methods=['GET'])
+@login_required
+def getFeedTimes():
+    feed_times = FeedTime.query.all()
+    feed_times_list = []
+    for feed_time in feed_times:
+        feed_times_list.append(feed_time.time)
+    print(feed_times_list)
+    return jsonify({'feed_times': feed_times_list})
+
+@app.route("/api/videoFeed")
+@login_required
+def videoFeed():
+    return Response(gen_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+# Initialize camera using libcamera (OpenCV interface)
+
+def gen_frames():
+    try:
+        while True:
+            frame = camera.camera.capture_array()
+
+            rotated_frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
+
+            # Convert the rotated frame to a JPEG image
+            _, jpeg = cv2.imencode('.jpg', rotated_frame)
+            frame = jpeg.tobytes()
+
+            # Yield the frame in MJPEG format
+            yield (b'--frame\r\n'
+                b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+    except Exception as e:
+        print(e)
+
+@app.route("/api/manualFeed", methods=['POST'])
+@login_required
+def manualFeed():
+    if request.method == 'POST':
+        # Parse the JSON response
+        data = request.get_json()
+        print(data)
+        # Get the time and type from the JSON response
+        size = data['size']
+        if size is None:
+            return Response("error", status=500)
+        sizeInt = int(size)
+        # Run the motor in a separate thread and return a success response immediately
+        t2 = threading.Thread(target=lcd.feedTimeDisplayRoutine, args=(sizeInt*3,)).start()
+        t1 = threading.Thread(target=motor.forward, args=(sizeInt*3,)).start()
+        # Add the feed record to the database
+        new_feeding = Feeding(time = time.strftime("%H:%M:%S"), type = sizeInt, date = time.strftime("%Y-%m-%d"))
+        db.session.add(new_feeding)
+        db.session.commit()
+        return Response("success", status=200)
+    else:
+        return Response("error", status=500)
+    
+@app.route("/api/addFeedTime", methods=['POST'])
+@login_required
+def addFeedTime():
+    if request.method == 'POST':
+        # Parse the JSON response
+        data = request.get_json()
+        print(data)
+        # Get the time and type from the JSON response
+        timeStr = data['time']
+        if time is None:
+            return Response("error", status=500)
+        type = data['type']
+        if type is None:
+            return Response("error", status=500)
+        typeInt = int(type)
+        # Add the feed time record to the database
+        new_feedtime = FeedTime(time = timeStr, type = typeInt)
+        db.session.add(new_feedtime)
+        db.session.commit()
+        return Response("success", status=200)
+    
+@app.route("/api/deleteFeedTime", methods=['POST'])
+@login_required
+def deleteFeedTime():
+    if request.method == 'POST':
+        # Parse the JSON response
+        data = request.get_json()
+        print(data)
+        # Get the time and type from the JSON response
+        timeStr = data['time']
+        if time is None:
+            return Response("error", status=500)
+        # Delete the feed time record from the database
+        feedtime = FeedTime.query.filter_by(time = timeStr).first()
+        db.session.delete(feedtime)
+        db.session.commit()
+        return Response("success", status=200)
+    
 

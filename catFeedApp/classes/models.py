@@ -1,4 +1,4 @@
-from appMain import db
+from appMain.app import db
 from sqlalchemy.ext.declarative import declarative_base
 
 class Owner(db.Model):

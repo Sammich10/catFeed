@@ -53,17 +53,19 @@ class DistanceSensor:
             sum+=dist
             # Add the readings to the list
             readings.append(dist)
-            time.sleep(self.R_DELAY)
-            
+            time.sleep(self.R_DELAY*2)
         avg = sum/samples
         # Return the average
         return avg
     
     def getReading_percent(self, samples=1):
-        percent = self.getReading_mm(samples) / self.MAX_DISTANCE * 100
+        percent = (self.MAX_DISTANCE -self.getReading_mm(samples)) / self.MAX_DISTANCE * 100
         if percent > 100:
             percent = 100
-            
+        elif percent < 0:
+            percent = 0
+        else:
+            percent = round(percent, 0)     
         return percent
 
 

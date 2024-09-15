@@ -2,7 +2,9 @@
 	<head>
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-	<link href="https://fonts.googleapis.com/css2?family=Merriweather+Sans:wght@300&display=swap" rel="stylesheet">
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
 	<link rel="stylesheet" href="{{ url_for('static',filename='styles/index.css') }}">
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 	<script src="{{ url_for('static',filename='js/index.js') }}"></script>
@@ -14,36 +16,90 @@
 		<div class="index-page">
 			<div class="top-banner">
 				<p class="username">Welcome, {{username}}!</p>
-				<p class="info">Lask Feed: {{last_feed}}</p>
-				<p class="info">Remaining: {{food_remaining_percent}}</p>
 				<a href="{{ url_for('logout') }}">Logout</a>
 			</div>
 			<div class="mainContainer">
 				<ul class = "tabs">
 					<li class = "tab-nav tabStatusNav"><a class="tab-nav-link" href="#tabContent">Feeder Status</a></li>
 					<li class = "tab-nav tabScheduleNav"><a class="tab-nav-link" href="#tabSchedule">Schedule Feeds</a></li>
-					<li class = "tab-nav tabHistoryNav"><a class="tab-nav-link" href="#tab3">Feeding History</a></li>
+					<li class = "tab-nav tabHistoryNav"><a class="tab-nav-link" href="#tabLogs">Feeding History</a></li>
 				</ul>
 				<div class="tab-content tabStatusContent" id="tabContent">
 					<!-- Feeder Status -->
 					<div class="header">
-						<h1>Feed My Cat Web Application</h1>
+						<h1>Feeder Control</h1>
 					</div>
-					<div class="feeder-stats">
-						<h2>Feeder Stats</h2>
-						<p id="foodremaining">Food remaining: </p>
-						<p id="last-feed">Last time fed: </p>
+					<div class="feeder-status">
+						<h2>Status</h2>
+						<div class="feeder-status-content">
+							<p id="last-feed">Last feed:</p><p id="last-feed-time"></p>
+						</div>
+						<div class="feeder-status-content" id="status-food-remaining" onclick="updateReading()">
+							<p id="foodremaining">Food remaining:</p><p id="foodremainingpercent"></p>
+						</div>
 					</div>
-					<ul class="feed-times">
-						
-					</ul>
-					<div class="feeder-menu"></div>
+					<div class="quick-controls">
+						<!-- Quick Controls -->
+						<h2>Quick Controls</h2>
+						<div class="quick-controls-content" id="quick-controls-slider">
+							<div class="quick-controls-text">
+								<p>Feeding Size:</p><p id="feed-size-text"></p>
+							</div>
+							<input type="range" id="feed-slider" min="1" max="5" value="3" title="Feeding Size">
+						</div>
+						<div class="quick-controls-content">
+							<button class="feed-button" id="feed-button" onclick="feed()">Feed</button>
+						</div>
+						<h3>Feeder Live Stream</h2>
+						<!-- Live Stream from feeder camera -->
+						<div class="live-stream">
+							<img src="/api/videoFeed">
+						</div>
+					</div>
 				</div>
 				<div class="tab-content tabScheduleContent" id="tabSchedule">
-				<!-- Schedule Feeds -->
-				</div>  
-				<div class="tab-content tabHistoryContent" id="tab3">
+					<!-- Schedule Feeds -->
+					<div class="header">
+						<h1>Schedule Feeds</h1>
+					</div>
+					<div class="schedule-feeds">
+						<div class="schedule-feeds-content">
+							<p id="schedule-feeds-text"></p>
+							<input type="time" id="schedule-feeds-time-input" title="Schedule Feeds">
+							<select name="feed-type" id="feed-type" title="Feed Type">
+								<option value="indefinite">Indefinite</option>
+								<option value="onetime">One-Time</option>
+							</select>
+							<button class="schedule-feeds-button" id="schedule-feeds-button" onclick="addFeedTime()" type="submit">Schedule Feed Time</button>
+						</div>
+						<div class="schedule-feeds-content">
+							<h2>View Feeding Schedule</h2>
+							<button class="fetch-schedule-button" id="fetch-schedule-button" onclick="displayFeedTimes()" type="submit">Fetch</button>
+						</div>
+						<div class="schedule-feeds-list-container">
+							<ul id="schedule-feeds-list">
+
+							</ul>
+						</div>
+					</div> 
+				</div> 
+				<div class="tab-content tabHistoryContent" id="tabLogs">
 					<!-- Feeding History -->
+					<div class="feeder-log-container">
+						<h3>Feeding History</h3>
+						<div class="feeder-log-content">
+							<ul id="feed-log-text">
+								<li>
+									<p>Time</p>
+									<p>Date</p>
+									<p>Size</p>
+								</li>
+							</ul>
+							<ul id="feed-log-list">
+
+							</ul>
+						</div>
+					</div>
 				</div>
 
 			</div>

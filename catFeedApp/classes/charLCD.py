@@ -17,7 +17,8 @@ class CharLCD:
         self.bus = SMBus(bus)
         # Internal buffer representation of the screen as a 4x20 array of characters.
         # This list will be able to contain additional rows so the screen can be scrolled.
-        self.screen = [[' ' for x in range(20)] for y in range(4)]
+        self.screen_buffer = [[' ' for x in range(20)] for y in range(4)]
+        self.screen_buffer_stack = []
         self.cursorPostion = [0, 0]
     # Write a single byte to the PCF8574 via I2C
     def _write_byte(self, data):
@@ -50,19 +51,22 @@ class CharLCD:
     # the LCD might be in 8-bit mode, but there's no guarantee about its mode or configuration. The initialization 
     # process is designed to reset the LCD and configure it properly.
     def _lcd_init(self):
-        # Send 0x03 to wake up the LCD and  ensure it is in 8-bit mode
-        self._lcd_send_command(0x03)
-        self._lcd_send_command(0x03)
-        self._lcd_send_command(0x03)
-        # Send 0x02 to switch to 4-bit mode
-        self._lcd_send_command(0x02)
+        try:
+            # Send 0x03 to wake up the LCD and  ensure it is in 8-bit mode
+            self._lcd_send_command(0x03)
+            self._lcd_send_command(0x03)
+            self._lcd_send_command(0x03)
+            # Send 0x02 to switch to 4-bit mode
+            self._lcd_send_command(0x02)
 
-        # Setup the display
-        self._lcd_send_command(self.LCD_FUNCTIONSET | self.LCD_4BITMODE | self.LCD_2LINE | self.LCD_5x8DOTS)
-        self._lcd_send_command(self.LCD_DISPLAYCONTROL | self.LCD_DISPLAYON)
-        self._lcd_send_command(self.LCD_CLEARDISPLAY)
-        self._lcd_send_command(self.LCD_ENTRYMODESET | self.LCD_ENTRYLEFT)
-        sleep(0.2)
+            # Setup the display
+            self._lcd_send_command(self.LCD_FUNCTIONSET | self.LCD_4BITMODE | self.LCD_2LINE | self.LCD_5x8DOTS)
+            self._lcd_send_command(self.LCD_DISPLAYCONTROL | self.LCD_DISPLAYON)
+            self._lcd_send_command(self.LCD_CLEARDISPLAY)
+            self._lcd_send_command(self.LCD_ENTRYMODESET | self.LCD_ENTRYLEFT)
+            sleep(0.2)
+        except Exception as e:
+            raise RuntimeError(e)
 
     # Clear the display
     def _lcd_clear(self):
@@ -86,6 +90,8 @@ class CharLCD:
         # If the string is too long, truncate it
         if len(string) > maxLength:
             string = string[:maxLength]
+        # Place the string in the buffer
+        self.screen_buffer[row] = string
         self._lcd_write_string(string)
         
     def writeStringToPos(self, col, row, string):
@@ -93,6 +99,8 @@ class CharLCD:
         # If the string is too long, truncate it
         if len(string) > self.LCD_WIDTH - col:
             string = string[:self.LCD_WIDTH - col]
+        # Place the string in the buffer
+        self.screen_buffer[row][col] = string
         self._lcd_write_string(string)
         
     def writeCharToPos(self, col, row, char):
@@ -110,9 +118,49 @@ class CharLCD:
         self._lcd_clear()
         
     def initialize(self):
-        self._lcd_init()
-            
+        try:
+            self._lcd_init()
+        except Exception as e:
+            raise RuntimeError(e)
         
+    def pushScreenBuffer(self):
+        currentScreenBuffer = [[' ' for i in range(self.LCD_WIDTH)] for j in range(self.LCD_HEIGHT)]
+        for i in range(self.LCD_HEIGHT):
+            for j in range(self.LCD_WIDTH):
+                currentScreenBuffer[i][j] = self.screen_buffer[i][j]
+        print("Pushing screen buffer: " + str(currentScreenBuffer))
+        self.screen_buffer_stack.append(currentScreenBuffer)
+        
+    def popScreenBuffer(self):
+        print("Poping screen buffer: " + str(self.screen_buffer))
+        buffer = self.screen_buffer_stack.pop()
+        return buffer
+    
+    def getScreenBufferTop(self):
+        print("Getting screen buffer top: " + str(self.screen_buffer_stack[-1]))
+        return self.screen_buffer_stack[-1]
+        
+    def ephemeralDisplay(self, array, time):
+        self.pushScreenBuffer()
+        self.clear()
+        print("new: " + str(array))
+        for i in range(len(array)):
+            self.writeRow(i, array[i])
+        sleep(time)
+        self.clear()
+        old = self.getScreenBufferTop()
+        print("old: " + str(old))
+        for i in range(len(old)):
+            self.writeRow(i, old[i])
+        self.popScreenBuffer()
+            
+    def feedTimeDisplayRoutine(self,t):
+        array = [[' ' for i in range(self.LCD_WIDTH)] for j in range(self.LCD_HEIGHT)]
+        array[0] = "   |`__/,|   ( (    "
+        array[1] = " _.|o o  |____) )   "
+        array[2]=  "-(((---(((--------  "
+        array[3] = "     Feed Time!     "
+        self.ephemeralDisplay(array, t)
 
     LCD_BACKLIGHT = 0x08
     LCD_NOBACKLIGHT = 0x00
@@ -159,7 +207,7 @@ class CharLCD:
     
     # Class variables and constants
     LCD_WIDTH = 20
-    LCD_HIEGH = 4
+    LCD_HEIGHT = 4
     
 
 
