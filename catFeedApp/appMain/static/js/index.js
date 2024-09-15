@@ -10,7 +10,14 @@ document.addEventListener('DOMContentLoaded', async function() {
     const reading = await getReading();
     updateFoodRemaining(reading);
     const last_feed = await getLastFeed();
-    updateLastFeed(last_feed);
+    if (last_feed == ""){
+        updateLastFeed("N/A");
+    }else{
+        updateLastFeed(convertTime(last_feed[0]) + " " + last_feed[1]);
+    }
+    // update slider value based on the default slider value
+    const feed_slider_value = document.getElementById("feed-slider").value;
+    document.getElementById("feed-size-text").innerHTML = sizeNumToString(feed_slider_value);
 });
 
 /**
@@ -36,9 +43,9 @@ async function getLastFeed(){
     const url = base_url + "/api/getLastFeed"
     const response = await fetch(url)
     const json = await response.json()
-    var tstring = json['last_feed'];
-    console.log("Updating last feed: " + tstring);
-    return tstring;
+    var last_feed = json['last_feed'];
+    console.log("Updating last feed: " + last_feed);
+    return last_feed;
 }
 
 /**
@@ -299,17 +306,25 @@ async function displayFeedTimes()
         scheduleFeedsList.removeChild(scheduleFeedsList.firstChild);
     }
     const feedTimes = await getFeedTimes();
-    feedTimes.forEach((time) => {
+    feedTimes.forEach((entry) => {
         const row = document.createElement('li');
         const timeCell = document.createElement('div');
+        const typeCell = document.createElement('div');
+        const sizeCell = document.createElement('div');
         const buttonCell = document.createElement('div');
         const button = document.createElement('button');
         // Convert the time from 24 hr to 12 hr format
-        const time12hr = convertTime(time);
+        const time12hr = convertTime(entry[0]);
         timeCell.textContent = time12hr;
+        const typeString = typeNumToString(entry[1]);
+        typeCell.textContent = typeString;
+        const sizeString = sizeNumToString(entry[2]);
+        sizeCell.textContent = sizeString;
         button.classList.add('remove-feed-button');
         buttonCell.appendChild(button);
         row.appendChild(timeCell);
+        row.appendChild(typeCell);
+        row.appendChild(sizeCell);
         row.appendChild(buttonCell);
         scheduleFeedsList.appendChild(row);
         // add event listener to the button
@@ -354,6 +369,9 @@ async function displayFeedTimes()
  */
 function convertTime(time) {
   const [hours, minutes] = time.split(':').map(Number);
+  if (hours == null || minutes == null) {
+    throw new Error('Invalid time format');
+  }
   const ampm = hours < 12 ? 'AM' : 'PM';
   const newHours = hours % 12 === 0 ? 12 : hours % 12;
   return `${newHours}:${minutes.toString().padStart(2, '0')} ${ampm}`;
@@ -420,11 +438,14 @@ async function displayFeedLogs()
         const timeCell = document.createElement('div');
         timeCell.textContent = convertTime(entries[i][1]);
         const typeCell = document.createElement('div');
-        typeCell.textContent = sizeNumToString(entries[i][2]);
+        typeCell.textContent = typeNumToString(entries[i][2]);
+        const sizeCell = document.createElement('div');
+        sizeCell.textContent = sizeNumToString(entries[i][3]);
         row.appendChild(timeCell);
         row.appendChild(dateCell);
         row.appendChild(typeCell);
-        feedLogList.appendChild(row);
+        row.appendChild(sizeCell);
+        feedLogList.prepend(row);
     }
 }
 
@@ -449,8 +470,30 @@ async function addFeedTime() {
             type = 1;
             break;
         default:
-            type = 0;
+            alert("Error: Invalid feed type");
+            return;
+    }
+    const feedSize = document.getElementById("feed-size").value;
+    var size = 0;
+    switch(feedSize) {
+        case "1":
+            size = 1;
             break;
+        case "2":
+            size = 2;
+            break;
+        case "3":
+            size = 3;
+            break;
+        case "4":
+            size = 4;
+            break;
+        case "5":
+            size = 5;
+            break;
+        default:
+            alert("Error: Invalid feed size");
+            return;
     }
     const url = base_url + "/api/addFeedTime"
     const response = await fetch(url, {
@@ -460,7 +503,8 @@ async function addFeedTime() {
         },
         body: JSON.stringify({
             'time': time,
-            'type': type
+            'type': type,
+            'size': size
         })
     });
     if (response.status === 200) {

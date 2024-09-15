@@ -15,6 +15,7 @@ class FeedTime(db.Model):
     __tablename__ = 'feedtimes'
     id = db.Column(db.Integer, primary_key=True)
     time = db.Column(db.String(80), unique=False, nullable=False)
+    size = db.Column(db.Integer, unique=False, nullable=False)
     type = db.Column(db.Integer, unique=False, nullable=False)
     
     def __repr__(self):
@@ -24,6 +25,7 @@ class Feeding(db.Model):
     __tablename__ = 'feedings'
     id = db.Column(db.Integer, primary_key=True)
     time = db.Column(db.String(80), unique=False, nullable=False)
+    size = db.Column(db.Integer, unique=False, nullable=False)
     type = db.Column(db.Integer, unique=False, nullable=False)
     date = db.Column(db.String(80), unique=False, nullable=False)
     

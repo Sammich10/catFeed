@@ -155,19 +155,21 @@ def getDistance():
 def getLastFeed():
     last_feed = Feeding.query.order_by(Feeding.time.desc()).first()
     if last_feed == None:
-        last_feed = "Unknown"
+        last_feed = ""
     else:
-        last_feed = str(last_feed.time)
+        last_feed = (last_feed.time, last_feed.date)
     print(last_feed)
     return jsonify({'last_feed': last_feed})
+
 
 @app.route("/api/getFeedingTimes", methods=['GET'])
 @login_required
 def getFeedingTimes():
-    feeding_times = Feeding.query.all()
+    # Get all recorded feeds, order by date first then time. Sort by newest to oldest
+    feeding_times = Feeding.query.order_by(Feeding.date, Feeding.time).all()
     feeding_times_list = []
     for feeding_time in feeding_times:
-        feeding_times_list.append((feeding_time.date, feeding_time.time, feeding_time.type)) 
+        feeding_times_list.append((feeding_time.date, feeding_time.time, feeding_time.type, feeding_time.size)) 
     print(feeding_times_list)
     return jsonify({'feeding_times': feeding_times_list})
 
@@ -177,7 +179,7 @@ def getFeedTimes():
     feed_times = FeedTime.query.all()
     feed_times_list = []
     for feed_time in feed_times:
-        feed_times_list.append(feed_time.time)
+        feed_times_list.append((feed_time.time, feed_time.type, feed_time.size))
     print(feed_times_list)
     return jsonify({'feed_times': feed_times_list})
 
@@ -215,13 +217,13 @@ def manualFeed():
         # Get the time and type from the JSON response
         size = data['size']
         if size is None:
-            return Response("error", status=500)
+            return Response("error, no size parameter for manual feed", status=500)
         sizeInt = int(size)
         # Run the motor in a separate thread and return a success response immediately
         t2 = threading.Thread(target=lcd.feedTimeDisplayRoutine, args=(sizeInt*3,)).start()
         t1 = threading.Thread(target=motor.forward, args=(sizeInt*3,)).start()
         # Add the feed record to the database
-        new_feeding = Feeding(time = time.strftime("%H:%M:%S"), type = sizeInt, date = time.strftime("%Y-%m-%d"))
+        new_feeding = Feeding(time = time.strftime("%H:%M:%S"), type = 0, date = time.strftime("%Y-%m-%d"), size = sizeInt)
         db.session.add(new_feeding)
         db.session.commit()
         return Response("success", status=200)
@@ -238,13 +240,17 @@ def addFeedTime():
         # Get the time and type from the JSON response
         timeStr = data['time']
         if time is None:
-            return Response("error", status=500)
+            return Response("error, no time parameter", status=500)
         type = data['type']
         if type is None:
-            return Response("error", status=500)
+            return Response("error, no type parameter", status=500)
         typeInt = int(type)
+        size = data['size']
+        if size is None:
+            return Response("error, no size parameter", status=500)
+        sizeInt = int(size)
         # Add the feed time record to the database
-        new_feedtime = FeedTime(time = timeStr, type = typeInt)
+        new_feedtime = FeedTime(time = timeStr, type = typeInt, size = sizeInt)
         db.session.add(new_feedtime)
         db.session.commit()
         return Response("success", status=200)

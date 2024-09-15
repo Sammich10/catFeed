@@ -170,8 +170,6 @@ h3{
 }
 .tabStatusContent{
 	height: 100%;
-	padding-top: 3.2vh;
-	padding-bottom: 2vh;
 }
 .feeder-status{
 	width: 85%;
@@ -187,6 +185,11 @@ h3{
 	justify-content: center;
 	align-items: center;
 	margin-bottom: 1.2vh;
+}
+.feeder-status-content p{
+	margin-left: .2vw;
+	margin-right: .2vw;
+    font-size: 2.2vh;
 }
 #status-food-remaining:hover{
 	cursor: pointer;
@@ -384,8 +387,6 @@ h3{
 	border-spacing: 0;
 }
 #schedule-feeds-list li{
-	margin-left: 1.2vh;
-	margin-right: 1.2vh;
 	padding-top: 1vh;
 	padding-bottom: 1vh;
 	border: 1px solid black;

@@ -1,4 +1,4 @@
-from appMain import app, db
+from appMain.app import app, db
 import os
 
 if os.path.exists('appMain/catFeed.db'):
