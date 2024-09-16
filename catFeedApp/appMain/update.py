@@ -1,148 +1,159 @@
-#This python script runs when the system starts up and
-#continupusly checks the feeds file and is responsible for 
-#automatically triggering feeds
-from datetime import datetime
-import time, traceback
-import threading
-from classes.DCMotor import DCMotor
-from classes.distanceSensor import read_distance
-from classes.charLCD import charLCD
+# Import database libraries
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import text
+import sqlite3 as sql
+# Import system libraries
 import os
 import sys
-import sqlite3 as sql
+import time as ti
+import threading
+import atexit
+import cv2
+import io
+# Database models
+from classes.models import engine, Owner, Feeding, FeedTime
+from appMain.feederControl import hardwareAccess
+# Threads
+lcdControl = None
+timeChecker = None
+# Thread control
+stop_threads = False
+running_threads = []
+# Thread flags / shared variables
+TimeToFeed = False
+feed = None
 
-screen = charLCD()
-motor = DCMotor()
-FEED_SIZE = 10
 
-feedsarray = []
+# Check if the current time matches any of the feedtimes in the database
+def checkFeedtimes():
+    # Get the current time
+    now = ti.time()
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    # Get the feedtimes from the database
+    connection = engine.connect()
+    feedtimes = connection.execute(text("SELECT * FROM feedtimes")).fetchall()
+    
+    # Loop through the feedtimes
+    for feedtime in feedtimes:
+        # Convert the time string to a time object
+        time = ti.strptime(feedtime.time, "%H:%M")
+        # Convert the time object to a time in seconds
+        time = ti.mktime(time)
+        # Check if the time is equal to the current time in hours and minutes
+        if time == now:
+            print("It is time to feed the cat")
+            # Return true
+            return feedtime
 
-db_path = os.path.join(BASE_DIR,"catFeed.sqlite3")
+    # Return false
+    return None
 
-def updateScreen(feedsarray):
-    distance = read_distance() * 100
-    percentfull = round((100-(distance * 100 / 12)),0)
-    status = ""
-    if(distance<=6 or distance > 1000):
-        status="Full"
-    elif(distance>6 and distance <=9):
-        status="~Half"
-    elif(distance>9 and distance<11):
-        status="low"
-    elif(distance >=11):
-        status="critical"
-    i = 0
-    now = datetime.now() #current date and time
-    screen.clear()
-    screen.setCursor(0,0)
-    w=now.strftime("%I:%M %p") + " | " + status
-    screen.write(w)
-    for c,y in enumerate(feedsarray):
-        if(y != '\n' and y != ''):
-            screen.setCursor(c+1,0)
-            y = y.strip()
-            t = datetime.strptime(y,"%H:%M")
-            t = t.strftime("%I:%M %p")
-            s = "Feed " + str(c+1) + ": " + str(t)
-            screen.write(s)
-        return
-
-def feed(time):
-    print("Feed time!")
-    date = datetime.now().strftime("%m/%d/%Y")
-    try:
-        conn = sql.connect(db_path)
-        cur = conn.cursor()
-    except sqlite3.Error as error:
-        print("sqlite error while updating log")
-        print(error)
-    cur.execute("INSERT INTO feedlog (time,date,size,type) VALUES (?,?,?,?)",(time,date,'regular','automatic'))
-    conn.commit()
-    conn.close()
-    motor.dispense(FEED_SIZE)
-    screen.clear()
-    screen.setCursor(1,0)
-    screen.write("   Feeding time!")
-    screen.setCursor(2,0)
-    screen.write("        >x<")
-    return
-
-def checkFeedTime(feedsarray):
-    rightnow = datetime.now().strftime("%H:%M")
-    for y in feedsarray:
-        y=y.strip()
-        if(y == rightnow):
-            feed(rightnow)
-            return True
-    return False
-
-def thread_checkFeedTimes(event):
-    #print("Feed time checking thread started")
-    event.set()
-    while(1):
-        print("checking feed time") 
-        if(checkFeedTime(feedsarray)):
-            event.clear()
-            time.sleep(60)
-            event.set()
+def checkFeedTimes_thread(stop_threads):
+    # This thread will continuously poll the database and check if the current time matches any of the feedtimes in the database
+    # If it does, set the flag to True to trigger a feeding from the control thread
+    global feed
+    global TimeToFeed
+    while not stop_threads:
+        feed = checkFeedtimes()
+        if feed is not None:
+            TimeToFeed = True
+            ti.sleep(100)
+        ti.sleep(5)
         
-        time.sleep(15)
-    print("thread 1 exited while loop")
+def getUpcomingFeedtimes(num = 3):
+    # Get the current time
+    now = ti.time()
 
-def updateArray():
-    feedsarray.clear()
-    i = 0
-    feedsfile = open(BASE_DIR + "/feedtimes.txt","r")
-    for i,x in enumerate(feedsfile):
-        try:
-            feedsarray[i] = x
-        except:
-            feedsarray.append(x)
-
-def thread_updateFeedsArray(event):
-    #print("screen update thread started")
-    while(1):
-        print("updating screen")
-        print(feedsarray)
-        event.wait()
-        updateArray()
-        updateScreen(feedsarray)
-        time.sleep(5)
-    print("thread 2 exited while loop")
-
-starttime = time.time()
-#test automatic feeding
-if(len(sys.argv)>1):
-    if(sys.argv[1]=="test"):
-       testarray=[]
-       testarray.append(datetime.now().strftime("%H:%M"))
-       print(testarray)
-       print("testing...")
-       checkFeedTime(testarray)
-       print("test complete")
-       exit(0)
-
-if __name__ == '__main__':
-    event = threading.Event()
-    try:
-        feedsfile = open(BASE_DIR + "/feedtimes.txt","r")
-        i=0 
-        for x in feedsfile:
-            if(i>2):
+    # Get the feedtimes from the database
+    connection = engine.connect()
+    feedtimes = connection.execute(text("SELECT * FROM feedtimes")).fetchall()
+    
+    upcomingFeedtimes = []
+    # Check for up to 2 upcoming feeds in the future (today's earliest feedtimes)
+    for feedtime in feedtimes:
+        # Check if the time is in the future
+        if feedtime.time > now:
+            upcomingFeedtimes.append(feedtime)
+    
+    # No feed times later today
+    if len(upcomingFeedtimes) == 0:
+        # Get the earliest 3 feedtimes from the database (tomorrows earliest feedtimes)
+        for i in range(0, len(feedtimes)):
+            if i > num:
                 break
-            i = i + 1
-            if x != "\n":
-                feedsarray.append(x)
+            if feedtimes[i].time < now:
+                upcomingFeedtimes.append(feedtimes[i])
+    
+    return upcomingFeedtimes
 
- 
-        t1=threading.Thread(target=thread_updateFeedsArray,args=(event,))
-        t2=threading.Thread(target=thread_checkFeedTimes,args=(event,))
-        t1.start()
-        t2.start()
+def updateDisplay(charArray):
+    if hardwareAccess.display is not None:
+        if len(charArray) > 4:
+            charArray = charArray[0:4]
+        for row in charArray:
+            hardwareAccess.display.writeRow(row)
+    else:
+        print("No display connected")
+            
+def displayUpcomingFeeds(upcomingFeedtimes):
+    numFeeds = len(upcomingFeedtimes)
+    display = [["Upcoming Feeds:"]]
+    for i in range(numFeeds):
+        if i > hardwareAccess.display.LCD_HEIGHT-1:
+            break
+        time = str(upcomingFeedtimes[i].time)
+        # Convert the time as HH:MM AM/PM
+        display.append(time)
+    updateDisplay(display)
+    
+def getLastFeedtime():
+    connection = engine.connect()
+    lastFeedtime = connection.execute(text("SELECT * FROM Feeding ORDER BY time DESC LIMIT 1")).fetchone()
+    return lastFeedtime
+    
+def lcd_thread(stop_threads):
+    print("Starting appMain.lcd_thread")
+    while not stop_threads():
+        upcomingFeedtimes = getUpcomingFeedtimes()
+        if len(upcomingFeedtimes) > 0:
+            displayUpcomingFeeds(upcomingFeedtimes)
+        else:
+            updateDisplay([["No upcoming feeds"]])
+        ti.sleep(10)
+        lastFeedtime = getLastFeedtime()
+        if lastFeedtime is not None:
+            updateDisplay([["Last Fed: " + str(lastFeedtime.time)]])
+        ti.sleep(10)
+        
+        
 
-    except KeyboardInterrupt:
-        t1.stop()
-        t2.stop()
-        exit(0)
+def start():
+    print("Starting appMain.update background threads")
+    global lcdControl
+    global timeChecker
+    global stop_threads    
+   
+    stop_threads = False
+    threads_to_start = []
+    lcdControl = threading.Thread(target=lcd_thread, args=(lambda: stop_threads,))
+    threads_to_start.append(lcdControl)
+    timeChecker = threading.Thread(target=checkFeedTimes_thread, args=(lambda: stop_threads,))
+    threads_to_start.append(timeChecker)
+    
+    for thread in threads_to_start:
+        print("Starting thread: " + str(thread))
+        thread.start()
+        running_threads.append(thread)
+    
+    atexit.register(stop)
+    
+def stop():
+    print("Stopping appMain.update background threads")
+    global stop_threads
+    global lcdControl
+    global timeChecker
+    stop_threads = True
+    for(thread) in running_threads:
+        print("Joining thread: " + str(thread))
+        thread.join()
+start()

@@ -16,7 +16,6 @@ class Camera:
         self.cam_config = self.camera.create_preview_configuration(main={"size": self.res})
         self.camera.configure(self.cam_config)
         # self.camera.set_preview_transform(picamera2.PreviewTransform(hflip=True, vflip=True, rotation=picamera2.Transform.Rotation.ROTATION_90))
-        atexit.register(self.cleanup)
         
     def start(self):
         self.camera.start()

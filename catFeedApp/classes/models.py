@@ -1,5 +1,8 @@
 from appMain.app import db
+from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
+
+engine = create_engine('sqlite:///catFeed.db')
 
 class Owner(db.Model):
     __tablename__ = 'owners'

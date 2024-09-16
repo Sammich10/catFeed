@@ -128,28 +128,23 @@ class CharLCD:
         for i in range(self.LCD_HEIGHT):
             for j in range(self.LCD_WIDTH):
                 currentScreenBuffer[i][j] = self.screen_buffer[i][j]
-        print("Pushing screen buffer: " + str(currentScreenBuffer))
         self.screen_buffer_stack.append(currentScreenBuffer)
         
     def popScreenBuffer(self):
-        print("Poping screen buffer: " + str(self.screen_buffer))
         buffer = self.screen_buffer_stack.pop()
         return buffer
     
     def getScreenBufferTop(self):
-        print("Getting screen buffer top: " + str(self.screen_buffer_stack[-1]))
         return self.screen_buffer_stack[-1]
         
     def ephemeralDisplay(self, array, time):
         self.pushScreenBuffer()
         self.clear()
-        print("new: " + str(array))
         for i in range(len(array)):
             self.writeRow(i, array[i])
         sleep(time)
         self.clear()
         old = self.getScreenBufferTop()
-        print("old: " + str(old))
         for i in range(len(old)):
             self.writeRow(i, old[i])
         self.popScreenBuffer()

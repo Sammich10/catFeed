@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
     // update slider value based on the default slider value
     const feed_slider_value = document.getElementById("feed-slider").value;
-    document.getElementById("feed-size-text").innerHTML = sizeNumToString(feed_slider_value);
+    document.getElementById("feed-size-text").innerHTML = sizeNumToString(parseInt(feed_slider_value));
 });
 
 /**

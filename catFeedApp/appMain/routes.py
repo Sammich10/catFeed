@@ -20,8 +20,7 @@ import io
 from PIL import Image
 # Database models
 from classes.models import Owner, Feeding, FeedTime
-from appMain.feederControl import dsens, lcd, motor, camera
-
+from appMain.feederControl import hardwareAccess
 # Decorator function to check if user is logged in by the presence of the 'logged-in' key in the session
 def login_required(f):
     @wraps(f)
@@ -144,7 +143,10 @@ def home():
 @app.route("/api/getDistance", methods=['GET'])
 @login_required
 def getDistance():
-    distance_percent = dsens.getReading_percent()
+    if hardwareAccess.foodsens is None:
+        # Return an error message
+        return Response("food distance sensor not found", status=500)
+    distance_percent = hardwareAccess.foodsens.getReading_percent()
     # Round to the nearest 5%
     distance_percent = round(distance_percent/20)*20
     print(distance_percent)
@@ -186,6 +188,9 @@ def getFeedTimes():
 @app.route("/api/videoFeed")
 @login_required
 def videoFeed():
+    if hardwareAccess.picam is None:
+        # Return an error message
+        return Response("camera not found", status=500)
     return Response(gen_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 # Initialize camera using libcamera (OpenCV interface)
@@ -193,12 +198,11 @@ def videoFeed():
 def gen_frames():
     try:
         while True:
-            frame = camera.camera.capture_array()
-
-            rotated_frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
-
+            frame = hardwareAccess.picam.camera.capture_array()
+            # TODO: Configurable rotation
+            # rotated_frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
             # Convert the rotated frame to a JPEG image
-            _, jpeg = cv2.imencode('.jpg', rotated_frame)
+            _, jpeg = cv2.imencode('.jpg', frame)
             frame = jpeg.tobytes()
 
             # Yield the frame in MJPEG format
@@ -211,6 +215,9 @@ def gen_frames():
 @login_required
 def manualFeed():
     if request.method == 'POST':
+        if hardwareAccess.motor is None:
+            # Return an error message
+            return Response("motor not found", status=500)
         # Parse the JSON response
         data = request.get_json()
         print(data)
@@ -219,9 +226,12 @@ def manualFeed():
         if size is None:
             return Response("error, no size parameter for manual feed", status=500)
         sizeInt = int(size)
+        # If the display is not found, still run the motor
+        if hardwareAccess.display is not None:
+            # Run the display routine in a separate thread
+            t2 = threading.Thread(target=hardwareAccess.display.feedTimeDisplayRoutine, args=(sizeInt*3,)).start()
         # Run the motor in a separate thread and return a success response immediately
-        t2 = threading.Thread(target=lcd.feedTimeDisplayRoutine, args=(sizeInt*3,)).start()
-        t1 = threading.Thread(target=motor.forward, args=(sizeInt*3,)).start()
+        t1 = threading.Thread(target=hardwareAccess.motor.forward, args=(sizeInt*3,)).start()
         # Add the feed record to the database
         new_feeding = Feeding(time = time.strftime("%H:%M:%S"), type = 0, date = time.strftime("%Y-%m-%d"), size = sizeInt)
         db.session.add(new_feeding)
