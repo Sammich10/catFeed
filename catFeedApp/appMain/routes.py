@@ -200,7 +200,7 @@ def gen_frames():
         while True:
             frame = hardwareAccess.picam.camera.capture_array()
             # TODO: Configurable rotation
-            # rotated_frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
+            frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
             # Convert the rotated frame to a JPEG image
             _, jpeg = cv2.imencode('.jpg', frame)
             frame = jpeg.tobytes()

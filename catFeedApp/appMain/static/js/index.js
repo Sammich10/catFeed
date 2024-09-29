@@ -136,6 +136,9 @@ function initializeIndexPage() {
             if(activeTab == null){
                 console.log("activeTab is null")
                 return
+            }else if(activeTab == targetTabPane){
+                console.log("activeTab == targetTabPane")
+                return
             }
             // Start the tab transition animation for the active tab to disappear
             activeTab.classList.remove('active');

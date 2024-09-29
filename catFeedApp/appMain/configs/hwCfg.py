@@ -16,7 +16,7 @@ class HardwareConfig:
         "COLS" : 20
     }
     CAMERA = {
-        "RESOLUTION" : (1280, 720),     # Default resolution 720p
+        "RESOLUTION" : (720, 720),     # Default resolution 720p
         "MAX_RESOLUTION" : (1920, 1080)
     }
     def __init__(self):

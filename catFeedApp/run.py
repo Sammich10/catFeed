@@ -1,7 +1,7 @@
 from appMain.app import app
 from appMain.feederControl import initializeClasses, cleanupClasses
 from appMain import routes
-from appMain import update
+# from appMain import update
 import atexit
 
 if __name__ == "__main__":

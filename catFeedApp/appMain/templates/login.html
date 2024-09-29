@@ -2,15 +2,23 @@
   <head>
 	<title>Cat Feed: Login</title>
 	<meta name="viewport" content="widstatic/bootstrap.min.css" rel="stylesheet" media="screen">
-  	<link rel="stylesheet" href="{{ url_for('static',filename='styles/login.css') }}">
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-	<link href="https://fonts.googleapis.com/css2?family=Merriweather+Sans:wght@300&display=swap" rel="stylesheet">
-
-  </head>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+	<link rel="stylesheet" href="{{ url_for('static',filename='styles/login.css') }}">
+	<script src="{{ url_for('static',filename='js/login.js') }}"></script>
+	<title>{{title}}</title>  
+</head>
   <body>
 	<div class="main-container">
-		<div class="form-container">
+		<ul class = "tabs">
+			<li class = "tab-nav tabLoginNav"><a class="tab-nav-link" href="#tabLogin">Login</a></li>
+			<li class = "tab-nav tabRegisterNav"><a class="tab-nav-link" href="#tabRegister">Register</a></li>
+		</ul>
+		<div class="tab-content form-container tabLoginContent" id="tabLogin">
 			<h1>Please login</h1>
 			<br>
 			<form action="" method="post">
@@ -18,7 +26,19 @@
 				<input type="password" placeholder="Password" name="password" value="{{request.form.password }}"><br>
 				<input class="btn btn-login" type="submit" value="Login"><br>
 			</form>
-			<a class="btn btn-register" href="{{ url_for('register') }}">Register New Owner</a><br>
+			{% if error %}
+				<p class="error"><strong>Error:</strong> {{ error }}
+			{% endif %}
+		</div>
+		<div class="tab-content form-container tabRegisterContent" id="tabRegister">
+			<h1>Enter registration information</h1>
+			<br>
+			<form action="" method="post">
+				<input type="text" placeholder="Username" name="username" value="{{request.form.username}}"><br>
+				<input type "text" placeholder="Email" name="email" value="{{request.form.email}}"><br>
+				<input type="password" placeholder="Password" name="password" value="{{request.form.password }}"><br>
+				<input class="btn btn-default" type="submit" value="Register New Owner"><br>
+			</form>
 			{% if error %}
 				<p class="error"><strong>Error:</strong> {{ error }}
 			{% endif %}

@@ -3,8 +3,8 @@
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 	<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
 	<link rel="stylesheet" href="{{ url_for('static',filename='styles/index.css') }}">
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 	<script src="{{ url_for('static',filename='js/index.js') }}"></script>
@@ -48,6 +48,7 @@
 						</div>
 						<div class="quick-controls-content">
 							<button class="feed-button" id="feed-button" onclick="feed()">Feed</button>
+							<button class="cam-toggle-button" id="cam-toggle-button" onclick="toggleCamera()">Toggle Camera</button>
 						</div>
 						<h3>Feeder Live Stream</h2>
 						<!-- Live Stream from feeder camera -->
