@@ -1,6 +1,8 @@
-# Automated Cat Feeder Using Raspberry Pi and Flask
+# Raspberry Pi Cat Feeder Flask Web Application
 
-> Autonomously feed your cat and schedule daily feedings! The catFeed app is a Flask powered cat feeder application that is designed to control the catFeed automated cat feeder.
+> Autonomously feed your cat and schedule daily feedings!
+>
+> The catFeed app is a Flask powered web application intended for use with my Raspberry Pi powered automated cat feeder project.
 
 ## Table of Contents
 
@@ -13,35 +15,41 @@
 
 ## General Information
 
-This project was originally born as a group project for an embedded systems class, and after the semester ended I decided to try and build a new one that I could keep and actually use to feed my two cats.
+This project was originally born as a group project for an embedded systems class, and after the semester ended I decided to try and build a new one that I could keep and actually use to feed my two cats. The project has undergone numerous revamps and periods of inactivity, but has slowly developed into what it is now:
+
+#### Feeder Chasis
+
+Feeder chasis info here
+
+#### Electronics
+
+Electronic component info here
 
 ## Technologies Used
 
-- Flask web application framework
+- Flask Web Application Framework
 - Apache HTTP server
 - SQLite3 Database
-- Raspberry Pi GPIO
 
 ## Features
 
-- Simple, user friendly web application UI to program the feeder and check its status
-- Schedule up to 2 daily feeds
+- Simple, friendly web application UI to interface with the feeder, check its status, schedule feeds, and view logged feeding information
+- Schedule an arbitrary number of daily or single-schedule feedings
 - Trigger a manual feed
+- View live camera feed
+- Check remaining food levels
 - Track feeds
 - View scheduled feeds and the status of the food hopper on LCD screen
 
 ## Setup/Usage
 
-The files for this project are located in the /var/www/html/catFeed folder on the raspberry pi.
-In order to get the project up and running, you must first clone the repository onto a Raspberry Pi. You will need to make sure
-you have installed Python, Flask, Apache, SQLite3, and pigpio. Configure Apache2 to work with Flask, and go into your Pi's /etc/rc.local file
-and add a line that runs the update.py file on boot.
+*The setup, installation, and delpoyment procedure is still being developed*
 
 ## Project Status
 
-The project as it stands is fully functional, and I would consider it to be in a decent 1.0 state. I do plan to add more features in time
-`<br />`_in progress_
+Active
 
-## Room for Improvement
+## Feature Wish List
 
-- Add a way to set the size of automated feeds. As of now their all "regular" size feeds by default.
+- PiCamera No-IR camera color control (B&W?)
+- More feeder status information on LCD
