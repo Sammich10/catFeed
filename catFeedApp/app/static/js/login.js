@@ -71,4 +71,39 @@ document.addEventListener('DOMContentLoaded', async function() {
     defaultTabContent.classList.remove('hidden');
     defaultTabContent.classList.add('active');
     defaultTabContent.style.removeProperty('display');
+
+    const registerForm = document.getElementById('register-form');
+
+    registerForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        // Get the information from the inputs in the form
+        const email = document.getElementById('email').value;
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        const formData = new FormData();
+        formData.append('email', email);
+        formData.append('username', username);
+        formData.append('password', password);
+
+        fetch('/register', {
+            method: 'POST',
+            body: formData,
+        })
+        .then((response) => response.json())
+        .then((data) => {
+            if(data.success) {
+                // Registration successful, redirect to login page
+                loginNav = document.getElementById("tabLoginNav");
+                loginNav.click();
+            } else {
+                // Registration failed, display error message
+                console.log('Registration failed');
+                r_usr = data.info['username'];
+                r_eml = data.info['email'];
+                str = "Registration failed: " + data.errors + "\n" + "Username: " + r_usr + "\n" + "Email: " + r_eml;
+                alert(str);
+            }
+        })
+        .catch((error) => console.error(error));
+    });
 });

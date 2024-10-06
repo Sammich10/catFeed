@@ -1,10 +1,13 @@
-from appMain.app import app
-from appMain.feederControl import initializeClasses, cleanupClasses
-from appMain import routes
-# from appMain import update
+from app import app
+from app.appLocal import catFeedLocalProc
+import os
 import atexit
-
+import multiprocessing
+            
+local_process = multiprocessing.Process(target=catFeedLocalProc, daemon=True)
+      
 if __name__ == "__main__":
-    initializeClasses()
-    atexit.register(cleanupClasses)
+    local_process.start()
+    print("Started local application process, PID: " + str(local_process.pid))
+    atexit.register(lambda: os.kill(local_process.pid, 9))
     app.run(host="0.0.0.0", port = "5000", debug=True)

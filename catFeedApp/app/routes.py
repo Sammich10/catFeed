@@ -1,5 +1,5 @@
 # Include flask app and database
-from appMain.app import app, db
+from app import app, db
 # Import the flask app and associated libraries 
 from flask import Flask, render_template, Response, request, jsonify, redirect, url_for, session
 from functools import wraps
@@ -9,18 +9,14 @@ from sqlalchemy import text
 import sqlite3 as sql
 # Import system libraries
 import os
-import sys
 import hashlib
 import time
 import threading
-import atexit
 import cv2
-import subprocess
-import io
 from PIL import Image
 # Database models
-from classes.models import Owner, Feeding, FeedTime
-from appMain.feederControl import hardwareAccess
+from app.models import Owner, Feeding, FeedTime
+from app import feeder
 # Decorator function to check if user is logged in by the presence of the 'logged-in' key in the session
 def login_required(f):
     @wraps(f)
@@ -77,10 +73,14 @@ def register():
         username = request.form['username']
         email = request.form['email']
         if verify_unique_email(email):
-            return render_template('register.html', error="Email already exists")
+            # Get the username associated with the email 
+            username = Owner.query.filter(Owner.email==email).first().username
+            resp = {'success': False, 'errors': 'Email already exists.', 'info': {'username': username, 'email': email}}
+            return jsonify(resp)
         password = hash_password(request.form['password'])
         add_owner(username, email, password)
-        return redirect(url_for('login'))
+        resp = {'success': True, 'errors': None, 'info': None}
+        return jsonify(resp)
     return render_template('register.html')
 
 # Checks if an email already exists in the database.
@@ -143,10 +143,10 @@ def home():
 @app.route("/api/getDistance", methods=['GET'])
 @login_required
 def getDistance():
-    if hardwareAccess.foodsens is None:
+    if feeder.foodsens is None:
         # Return an error message
         return Response("food distance sensor not found", status=500)
-    distance_percent = hardwareAccess.foodsens.getReading_percent()
+    distance_percent = feeder.foodsens.getReading_percent()
     # Round to the nearest 5%
     distance_percent = round(distance_percent/20)*20
     print(distance_percent)
@@ -188,7 +188,8 @@ def getFeedTimes():
 @app.route("/api/videoFeed")
 @login_required
 def videoFeed():
-    if hardwareAccess.picam is None:
+    print("Starting live video feed")
+    if feeder.picam is None:
         # Return an error message
         return Response("camera not found", status=500)
     return Response(gen_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
@@ -198,7 +199,7 @@ def videoFeed():
 def gen_frames():
     try:
         while True:
-            frame = hardwareAccess.picam.camera.capture_array()
+            frame = feeder.picam.camera.capture_array()
             # TODO: Configurable rotation
             frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
             # Convert the rotated frame to a JPEG image
@@ -215,7 +216,7 @@ def gen_frames():
 @login_required
 def manualFeed():
     if request.method == 'POST':
-        if hardwareAccess.motor is None:
+        if feeder.motor is None:
             # Return an error message
             return Response("motor not found", status=500)
         # Parse the JSON response
@@ -227,11 +228,11 @@ def manualFeed():
             return Response("error, no size parameter for manual feed", status=500)
         sizeInt = int(size)
         # If the display is not found, still run the motor
-        if hardwareAccess.display is not None:
+        if feeder.display is not None:
             # Run the display routine in a separate thread
-            t2 = threading.Thread(target=hardwareAccess.display.feedTimeDisplayRoutine, args=(sizeInt*3,)).start()
+            t2 = threading.Thread(target=feeder.display.feedTimeDisplayRoutine, args=(sizeInt*3,)).start()
         # Run the motor in a separate thread and return a success response immediately
-        t1 = threading.Thread(target=hardwareAccess.motor.forward, args=(sizeInt*3,)).start()
+        t1 = threading.Thread(target=feeder.motor.forward, args=(sizeInt*3,)).start()
         # Add the feed record to the database
         new_feeding = Feeding(time = time.strftime("%H:%M:%S"), type = 0, date = time.strftime("%Y-%m-%d"), size = sizeInt)
         db.session.add(new_feeding)

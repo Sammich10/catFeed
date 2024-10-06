@@ -6,16 +6,21 @@ class Camera:
     def __init__(self, resolution=(640, 480)):
         self.res = resolution
         self.camera = None
+        self.initialized = False
     
     def initialize(self):
         print("Initializing camera with resolution: " + str(self.res))
-        if self.camera:
-            self.camera.stop()
-            self.camera.close()
-        self.camera = Picamera2()
-        self.cam_config = self.camera.create_preview_configuration(main={"size": self.res})
-        self.camera.configure(self.cam_config)
-        # self.camera.set_preview_transform(picamera2.PreviewTransform(hflip=True, vflip=True, rotation=picamera2.Transform.Rotation.ROTATION_90))
+        try:
+            if self.camera:
+                self.camera.stop()
+                self.camera.close()
+            self.camera = Picamera2()
+            self.cam_config = self.camera.create_preview_configuration(main={"size": self.res})
+            self.camera.configure(self.cam_config)
+            # self.camera.set_preview_transform(picamera2.PreviewTransform(hflip=True, vflip=True, rotation=picamera2.Transform.Rotation.ROTATION_90))
+            self.initialized = True
+        except Exception as e:
+            raise RuntimeError(e)
         
     def start(self):
         self.camera.start()
@@ -24,6 +29,8 @@ class Camera:
         if self.camera:
             self.camera.stop()
             self.camera.close()
+            
+        self.initialized = False
         
     def setResolution(self, resolution):
         # Verify that the resolution is valid

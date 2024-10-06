@@ -6,8 +6,7 @@ class DistanceSensor:
     def __init__(self, trig_pin=16, echo_pin=20):
         self.trig_pin = trig_pin
         self.echo_pin = echo_pin
-        self.pi = pigpio.pi()
-        self.done = threading.Event()
+        self.initialized = False
         self.low = 0
 
     def _rise(self, gpio, level, tick):
@@ -70,14 +69,20 @@ class DistanceSensor:
 
 
     # Setup the trigger and echo pins with the pigpio library
-    def setup(self):
-        # The trigger pin is an output, it is used to send the ultrasonic pulse
-        self.pi.set_mode(self.trig_pin, pigpio.OUTPUT)
-        # The echo pin is an input, it is used to measure the distance, measuring the ticks
-        # when the echo pin goes high and low
-        self.pi.set_mode(self.echo_pin, pigpio.INPUT)
-        self.pi.callback(self.echo_pin, pigpio.RISING_EDGE, self._rise)
-        self.pi.callback(self.echo_pin, pigpio.FALLING_EDGE, self._fall)
+    def initialize(self):
+        try:
+            self.pi = pigpio.pi()
+            self.done = threading.Event()
+            # The trigger pin is an output, it is used to send the ultrasonic pulse
+            self.pi.set_mode(self.trig_pin, pigpio.OUTPUT)
+            # The echo pin is an input, it is used to measure the distance, measuring the ticks
+            # when the echo pin goes high and low
+            self.pi.set_mode(self.echo_pin, pigpio.INPUT)
+            self.pi.callback(self.echo_pin, pigpio.RISING_EDGE, self._rise)
+            self.pi.callback(self.echo_pin, pigpio.FALLING_EDGE, self._fall)
+        except Exception as e:
+            raise RuntimeError(e)
+        self.initialized = True
 
     MAX_DISTANCE = 150
     MIN_DISTANCE = 0

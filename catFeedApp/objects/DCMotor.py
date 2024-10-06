@@ -6,8 +6,16 @@ class DCMotor:
     def __init__(self, en_1_pin = 19, en_2_pin = 26):
         self.en1 = en_1_pin
         self.en2 = en_2_pin
-        self.rpi.set_mode(self.en1, pigpio.OUTPUT)
-        self.rpi.set_mode(self.en2, pigpio.OUTPUT)
+        self.initialized = False
+
+    def initialize(self):
+        try:
+            self.rpi.set_mode(self.en1, pigpio.OUTPUT)
+            self.rpi.set_mode(self.en2, pigpio.OUTPUT)
+        except Exception as e:
+            raise RuntimeError(e)
+        self.initialized = True
+        
     def forward(self,t):
         self.rpi.write(self.en1, 1)
         self.rpi.write(self.en2, 0)

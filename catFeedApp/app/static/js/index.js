@@ -332,7 +332,7 @@ async function displayFeedTimes()
         scheduleFeedsList.appendChild(row);
         // add event listener to the button
         button.addEventListener('click', (e) => {
-            removeTime(time, e);
+            removeTime(entry[0], e);
             scheduleFeedsList.removeChild(row);
         });
   });

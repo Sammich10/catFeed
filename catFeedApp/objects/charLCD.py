@@ -20,6 +20,7 @@ class CharLCD:
         self.screen_buffer = [[' ' for x in range(20)] for y in range(4)]
         self.screen_buffer_stack = []
         self.cursorPostion = [0, 0]
+        self.initialized = False
     # Write a single byte to the PCF8574 via I2C
     def _write_byte(self, data):
         self.bus.write_byte(self.address, data | self.LCD_BACKLIGHT)
@@ -50,7 +51,7 @@ class CharLCD:
     # When the LCD powers on, it defaults to an unknown state. The HD44780 datasheet specifies that after power-up, 
     # the LCD might be in 8-bit mode, but there's no guarantee about its mode or configuration. The initialization 
     # process is designed to reset the LCD and configure it properly.
-    def _lcd_init(self):
+    def initialize(self):
         try:
             # Send 0x03 to wake up the LCD and  ensure it is in 8-bit mode
             self._lcd_send_command(0x03)
@@ -58,7 +59,6 @@ class CharLCD:
             self._lcd_send_command(0x03)
             # Send 0x02 to switch to 4-bit mode
             self._lcd_send_command(0x02)
-
             # Setup the display
             self._lcd_send_command(self.LCD_FUNCTIONSET | self.LCD_4BITMODE | self.LCD_2LINE | self.LCD_5x8DOTS)
             self._lcd_send_command(self.LCD_DISPLAYCONTROL | self.LCD_DISPLAYON)
@@ -67,6 +67,7 @@ class CharLCD:
             sleep(0.2)
         except Exception as e:
             raise RuntimeError(e)
+        self.initialized = True
 
     # Clear the display
     def _lcd_clear(self):
@@ -116,12 +117,6 @@ class CharLCD:
         
     def clear(self):
         self._lcd_clear()
-        
-    def initialize(self):
-        try:
-            self._lcd_init()
-        except Exception as e:
-            raise RuntimeError(e)
         
     def pushScreenBuffer(self):
         currentScreenBuffer = [[' ' for i in range(self.LCD_WIDTH)] for j in range(self.LCD_HEIGHT)]

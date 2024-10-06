@@ -15,13 +15,13 @@
   <body>
 	<div class="main-container">
 		<ul class = "tabs">
-			<li class = "tab-nav tabLoginNav"><a class="tab-nav-link" href="#tabLogin">Login</a></li>
-			<li class = "tab-nav tabRegisterNav"><a class="tab-nav-link" href="#tabRegister">Register</a></li>
+			<li class = "tab-nav tabLoginNav" id="tabLoginNav"><a class="tab-nav-link" href="#tabLogin">Login</a></li>
+			<li class = "tab-nav tabRegisterNav" id="tabRegisterNav"><a class="tab-nav-link" href="#tabRegister">Register</a></li>
 		</ul>
 		<div class="tab-content form-container tabLoginContent" id="tabLogin">
-			<h1>Please login</h1>
+			<h1 class="header" id="login-header">Please login</h1>
 			<br>
-			<form action="" method="post">
+			<form action="{{ url_for('login') }}" method="post">
 				<input type="text" placeholder="Username" name="username" value="{{request.form.username}}"><br>
 				<input type="password" placeholder="Password" name="password" value="{{request.form.password }}"><br>
 				<input class="btn btn-login" type="submit" value="Login"><br>
@@ -31,12 +31,12 @@
 			{% endif %}
 		</div>
 		<div class="tab-content form-container tabRegisterContent" id="tabRegister">
-			<h1>Enter registration information</h1>
+			<h1 class="header" id="register-header">Enter Registration information</h1>
 			<br>
-			<form action="" method="post">
-				<input type="text" placeholder="Username" name="username" value="{{request.form.username}}"><br>
-				<input type "text" placeholder="Email" name="email" value="{{request.form.email}}"><br>
-				<input type="password" placeholder="Password" name="password" value="{{request.form.password }}"><br>
+			<form id="register-form">
+				<input type "text" placeholder="Email" name="email" id="email" value="{{request.form.email}}"><br>
+				<input type="text" placeholder="Username" name="username" id="username" value="{{request.form.username}}"><br>
+				<input type="password" placeholder="Password" name="password" id="password" value="{{request.form.password}}"><br>
 				<input class="btn btn-default" type="submit" value="Register New Owner"><br>
 			</form>
 			{% if error %}

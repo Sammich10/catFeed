@@ -1,4 +1,4 @@
-from appMain.app import db
+from app import db
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 
