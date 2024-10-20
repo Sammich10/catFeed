@@ -122,8 +122,10 @@ class TaskManager:
 
 def triggerFeed(fsize):
     print("Triggering feed")
-    feeder.display.feedTimeDisplayRoutine()
-    feeder.motor.forward(fsize*3)
+    if feeder.display is not None: 
+        threading.Thread(target=feeder.display.feedTimeDisplayRoutine, args=(fsize*3,)).start()
+    if feeder.motor is not None:
+        threading.Thread(target=feeder.motor.forward, args=(fsize*3,)).start()
 
 def checkFeedTime():
     print("Checking feed times")

@@ -18,7 +18,7 @@ class CharLCD:
         self.bus = SMBus(bus)
         # Internal buffer representation of the screen as a 4x20 array of characters.
         # This list will be able to contain additional rows so the screen can be scrolled.
-        self.screen_buffer = [[' ' for x in range(20)] for y in range(4)]
+        self.screen_buffer = [[' ' for i in range(self.LCD_WIDTH)] for j in range(self.LCD_HEIGHT)]
         self.screen_buffer_stack = []
         self.panes = []
         self.paneIndex = 0
@@ -105,8 +105,9 @@ class CharLCD:
         
     def _pushScreenBuffer(self):
         currentScreenBuffer = [[' ' for i in range(self.LCD_WIDTH)] for j in range(self.LCD_HEIGHT)]
-        for i in range(self.LCD_HEIGHT):
-            for j in range(self.LCD_WIDTH):
+        for i in range(len(self.screen_buffer)):
+            # Copy the current screen buffer
+            for j in range(len(self.screen_buffer[i])):
                 currentScreenBuffer[i][j] = self.screen_buffer[i][j]
         self.screen_buffer_stack.append(currentScreenBuffer)
         

@@ -248,7 +248,7 @@ def manualFeed():
         # Run the motor in a separate thread and return a success response immediately
         t1 = threading.Thread(target=feeder.motor.forward, args=(sizeInt*3,)).start()
         # Add the feed record to the database
-        new_feeding = Feeding(time = time.strftime("%H:%M:%S"), type = 0, date = time.strftime("%Y-%m-%d"), size = sizeInt)
+        new_feeding = Feeding(time = time.strftime("%H:%M"), type = 0, date = time.strftime("%Y-%m-%d"), size = sizeInt)
         db.session.add(new_feeding)
         db.session.commit()
         return Response("success", status=200)
