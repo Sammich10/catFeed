@@ -209,12 +209,6 @@ def updatePastFeedsPane():
         
 def iterateLcdPane():
     print("Iterating LCD pane")
-    global upcomingFeedsString
-    global pastFeedsString
-    if len(upcomingFeedsString) > 0:
-        feeder.display.updatePane('upcomingFeeds', [[' ' for i in range(feeder.display.LCD_WIDTH)] for j in range(feeder.display.LCD_HEIGHT)])
-    if len(pastFeedsString) > 0:
-        feeder.display.updatePane('pastFeeds', [[' ' for i in range(feeder.display.LCD_WIDTH)] for j in range(feeder.display.LCD_HEIGHT)])
     feeder.display.iteratePanes()
     
 manager = TaskManager()
