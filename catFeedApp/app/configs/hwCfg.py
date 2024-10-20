@@ -16,6 +16,6 @@ class HardwareConfig:
         "COLS" : 20
     }
     CAMERA = {
-        "RESOLUTION" : (720, 720),     # Default resolution 720p
+        "RESOLUTION" : (1080, 1080),     # Default resolution 720p
         "MAX_RESOLUTION" : (1920, 1080)
     }

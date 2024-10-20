@@ -196,14 +196,28 @@ def videoFeed():
 
 # Initialize camera using libcamera (OpenCV interface)
 
+def processFrame(frame_raw, setting):
+    if setting == 0:
+        frame_yuv = cv2.cvtColor(frame_raw, cv2.COLOR_BGR2YUV)
+        frame_y = frame_yuv[:, :, 0]
+        frame_y_bilateral = cv2.bilateralFilter(frame_y, 5, 150, 150)
+        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+        frame_processed = clahe.apply(frame_y_bilateral)
+        return frame_processed
+    if setting == 1:
+        # Convert the frame to grayscale
+        gray = cv2.cvtColor(frame_raw, cv2.COLOR_BGR2GRAY)
+        return gray
+
 def gen_frames():
     try:
         while True:
-            frame = feeder.picam.camera.capture_array()
+            frame_raw = feeder.picam.camera.capture_array()
             # TODO: Configurable rotation
-            frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
+            frame_raw = cv2.rotate(frame_raw, cv2.ROTATE_90_COUNTERCLOCKWISE)
+            frame_processed = processFrame(frame_raw, 0)
             # Convert the rotated frame to a JPEG image
-            _, jpeg = cv2.imencode('.jpg', frame)
+            _, jpeg = cv2.imencode('.jpg', frame_processed)
             frame = jpeg.tobytes()
 
             # Yield the frame in MJPEG format

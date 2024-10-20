@@ -5,8 +5,7 @@ from flask_migrate import Migrate
 from app.hwCtrl.feeder import CatFeeder
 import os
 import multiprocessing
-import time
-import datetime
+import atexit
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -24,9 +23,20 @@ migrate = Migrate(app, db)
 
 feeder = CatFeeder()
 
-if os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
-    feeder.initialize()
-    feeder.startCamera()
-    print("Feeder initialized")
+from app import models
 
-from app import routes, models
+if os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
+    # initialize the feeder and start the camera
+    feeder.initialize()
+    print("Feeder initialized")
+    feeder.startCamera()
+    print("Camera started")
+    from app.appLocal import manager
+    manager.start()
+    def shutdown():
+        manager.stop()
+        feeder.stopCamera()
+    atexit.register(shutdown)
+
+from app import routes
+

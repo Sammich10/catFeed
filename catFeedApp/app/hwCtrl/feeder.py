@@ -92,6 +92,13 @@ class CatFeeder:
                 raise RuntimeError(e)
         else:
             raise RuntimeError("Camera not initialized.")
+        
+    def stopCamera(self):
+        if self.picam.initialized:
+            try:
+                self.picam.cleanup()
+            except Exception as e:
+                raise RuntimeError(e)
             
     def initialize(self):
         if not self.hardwareConfigured:

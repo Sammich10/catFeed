@@ -1,5 +1,6 @@
 from smbus2 import SMBus
 from time import sleep
+import threading
 
 class CharLCD:
     # This class is used to control the character LCD using the Raspberry Pi's I2C interface
@@ -19,8 +20,12 @@ class CharLCD:
         # This list will be able to contain additional rows so the screen can be scrolled.
         self.screen_buffer = [[' ' for x in range(20)] for y in range(4)]
         self.screen_buffer_stack = []
+        self.panes = []
+        self.paneIndex = 0
+        self.paneCount = 0
         self.cursorPostion = [0, 0]
         self.initialized = False
+        self.lcdUpdateLock = threading.Lock()
     # Write a single byte to the PCF8574 via I2C
     def _write_byte(self, data):
         self.bus.write_byte(self.address, data | self.LCD_BACKLIGHT)
@@ -47,6 +52,70 @@ class CharLCD:
     def _lcd_send_char(self, char):
         self._write_four_bits(self.LCD_BACKLIGHT | 0b00000001 | (char & 0xF0))
         self._write_four_bits(self.LCD_BACKLIGHT | 0b00000001 | ((char << 4) & 0xF0))
+
+    # Clear the display
+    def _lcd_clear(self):
+        self._lcd_send_command(self.LCD_CLEARDISPLAY)
+        sleep(0.002)
+
+    # Write a string of characters to the LCD
+    def _lcd_write_string(self, string):
+        for char in string:
+            self._lcd_send_char(ord(char))
+
+    # Set the cursor position
+    def _lcd_set_cursor(self, col, row):
+        row_offsets = [0x00, 0x40, 0x14, 0x54]
+        self._lcd_send_command(self.LCD_SETDDRAMADDR | (col + row_offsets[row]))
+        self.cursorPostion = [col, row]
+        
+    def _writeRow(self, row, string):
+        # If the string is too long, truncate it
+        if len(string) > self.LCD_WIDTH:
+            string = string[:self.LCD_WIDTH]
+        if len(string) == 0:
+            return
+        self._lcd_set_cursor(0, row)
+        # Place the string in the buffer
+        self.screen_buffer[row] = string
+        self._lcd_write_string(string)
+        
+    def _writeStringToPos(self, col, row, string):
+        self._lcd_set_cursor(col, row)
+        # If the string is too long, truncate it
+        if len(string) > self.LCD_WIDTH - col:
+            string = string[:self.LCD_WIDTH - col]
+        # Place the string in the buffer
+        self.screen_buffer[row][col] = string
+        self._lcd_write_string(string)
+        
+    def _writeCharToPos(self, col, row, char):
+        if(col > self.LCD_WIDTH - 1) and (row > self.LCD_HEIGHT - 1):
+            self._lcd_set_cursor(col, row)
+            self._lcd_send_char(ord(char))
+            
+    def _displayOn(self):
+        self._lcd_send_command(self.LCD_DISPLAYCONTROL | self.LCD_DISPLAYON)
+        
+    def _displayOff(self):
+        self._lcd_send_command(self.LCD_DISPLAYCONTROL | self.LCD_DISPLAYOFF)
+        
+    def _clear(self):
+        self._lcd_clear()
+        
+    def _pushScreenBuffer(self):
+        currentScreenBuffer = [[' ' for i in range(self.LCD_WIDTH)] for j in range(self.LCD_HEIGHT)]
+        for i in range(self.LCD_HEIGHT):
+            for j in range(self.LCD_WIDTH):
+                currentScreenBuffer[i][j] = self.screen_buffer[i][j]
+        self.screen_buffer_stack.append(currentScreenBuffer)
+        
+    def _popScreenBuffer(self):
+        buffer = self.screen_buffer_stack.pop()
+        return buffer
+    
+    def _getScreenBufferTop(self):
+        return self.screen_buffer_stack[-1]
     
     # When the LCD powers on, it defaults to an unknown state. The HD44780 datasheet specifies that after power-up, 
     # the LCD might be in 8-bit mode, but there's no guarantee about its mode or configuration. The initialization 
@@ -68,81 +137,26 @@ class CharLCD:
         except Exception as e:
             raise RuntimeError(e)
         self.initialized = True
-
-    # Clear the display
-    def _lcd_clear(self):
-        self._lcd_send_command(self.LCD_CLEARDISPLAY)
-        sleep(0.002)
-
-    # Write a string of characters to the LCD
-    def _lcd_write_string(self, string):
-        for char in string:
-            self._lcd_send_char(ord(char))
-
-    # Set the cursor position
-    def _lcd_set_cursor(self, col, row):
-        row_offsets = [0x00, 0x40, 0x14, 0x54]
-        self._lcd_send_command(self.LCD_SETDDRAMADDR | (col + row_offsets[row]))
-        self.cursorPostion = [col, row]
         
-    def writeRow(self, row, string):
-        self._lcd_set_cursor(0, row)
-        maxLength = self.LCD_WIDTH
-        # If the string is too long, truncate it
-        if len(string) > maxLength:
-            string = string[:maxLength]
-        # Place the string in the buffer
-        self.screen_buffer[row] = string
-        self._lcd_write_string(string)
-        
-    def writeStringToPos(self, col, row, string):
-        self._lcd_set_cursor(col, row)
-        # If the string is too long, truncate it
-        if len(string) > self.LCD_WIDTH - col:
-            string = string[:self.LCD_WIDTH - col]
-        # Place the string in the buffer
-        self.screen_buffer[row][col] = string
-        self._lcd_write_string(string)
-        
-    def writeCharToPos(self, col, row, char):
-        if(col > self.LCD_WIDTH - 1) and (row > self.LCD_HEIGHT - 1):
-            self._lcd_set_cursor(col, row)
-            self._lcd_send_char(ord(char))
-            
-    def displayOn(self):
-        self._lcd_send_command(self.LCD_DISPLAYCONTROL | self.LCD_DISPLAYON)
-        
-    def displayOff(self):
-        self._lcd_send_command(self.LCD_DISPLAYCONTROL | self.LCD_DISPLAYOFF)
-        
-    def clear(self):
-        self._lcd_clear()
-        
-    def pushScreenBuffer(self):
-        currentScreenBuffer = [[' ' for i in range(self.LCD_WIDTH)] for j in range(self.LCD_HEIGHT)]
-        for i in range(self.LCD_HEIGHT):
-            for j in range(self.LCD_WIDTH):
-                currentScreenBuffer[i][j] = self.screen_buffer[i][j]
-        self.screen_buffer_stack.append(currentScreenBuffer)
-        
-    def popScreenBuffer(self):
-        buffer = self.screen_buffer_stack.pop()
-        return buffer
+    def _writeScreen(self, array):
+        self._clear()
+        for i in range(min(self.LCD_HEIGHT, len(array))):
+            self.screen_buffer[i] = array[i]
+            self._writeRow(i, array[i])
     
-    def getScreenBufferTop(self):
-        return self.screen_buffer_stack[-1]
-        
     def ephemeralDisplay(self, array, time):
-        self.pushScreenBuffer()
-        self.clear()
+        self.lcdUpdateLock.acquire()
+        self._pushScreenBuffer()
+        self._clear()
         for i in range(len(array)):
-            self.writeRow(i, array[i])
+            self._writeRow(i, array[i])
         sleep(time)
-        self.clear()
-        old = self.getScreenBufferTop()
+        self._clear()
+        old = self._getScreenBufferTop()
         for i in range(len(old)):
-            self.writeRow(i, old[i])
-        self.popScreenBuffer()
+            self._writeRow(i, old[i])
+        self._popScreenBuffer()
+        self.lcdUpdateLock.release()
             
     def feedTimeDisplayRoutine(self,t):
         array = [[' ' for i in range(self.LCD_WIDTH)] for j in range(self.LCD_HEIGHT)]
@@ -151,6 +165,53 @@ class CharLCD:
         array[2]=  "-(((---(((--------  "
         array[3] = "     Feed Time!     "
         self.ephemeralDisplay(array, t)
+        
+    def registerPane(self, name, pane):
+        for i in range(len(self.panes)):
+            if self.panes[i]['name'] == name:
+                print("Pane " + name + " already exists")
+                return
+        print("Registered pane: " + name)
+        newPane = {'paneData': pane, 'name': name}
+        self.panes.append(newPane)
+        self.paneCount = len(self.panes)
+        
+    def removePane(self, name):
+        paneFound = False
+        for i in range(len(self.panes)):
+            if self.panes[i]['name'] == name:
+                paneFound = True
+                self.panes.pop(i)
+                self.paneCount -= 1
+        if not paneFound:
+            print("Pane " + name + " not found")
+            
+    def updatePane(self, name, data):
+        paneFound = False
+        # Verify that the pane exists
+        for i in range(len(self.panes)):
+            if self.panes[i]['name'] == name:
+                # Update the pane data
+                paneFound = True
+                self.panes[i]['paneData'] = data
+        # If the pane was found and the updated pane is the currently displayed pane, update the screen
+        with self.lcdUpdateLock:
+            if paneFound and self.panes[self.paneIndex]['name'] == name:
+                self._writeScreen(self.panes[self.paneIndex]['paneData'])
+        if not paneFound:
+            print("Pane " + name + " not found, cannot update content")
+            
+    def iteratePanes(self):
+        numPanes = len(self.panes)
+        with self.lcdUpdateLock:
+            if self.paneIndex + 1 >= numPanes:
+                self.paneIndex = 0
+            else:
+                self.paneIndex += 1
+            print("Iterating pane: " + self.panes[self.paneIndex]['name'])
+            self._writeScreen(self.panes[self.paneIndex]['paneData'])
+            
+    
 
     LCD_BACKLIGHT = 0x08
     LCD_NOBACKLIGHT = 0x00
