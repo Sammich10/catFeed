@@ -195,27 +195,32 @@ def videoFeed():
     return Response(gen_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 # Initialize camera using libcamera (OpenCV interface)
-
+camera_mode = 0
 def processFrame(frame_raw, setting):
     if setting == 0:
+        # Convert the frame to grayscale
+        gray = cv2.cvtColor(frame_raw, cv2.COLOR_BGR2GRAY)
+        return gray 
+    if setting == 1:
         frame_yuv = cv2.cvtColor(frame_raw, cv2.COLOR_BGR2YUV)
         frame_y = frame_yuv[:, :, 0]
         frame_y_bilateral = cv2.bilateralFilter(frame_y, 5, 150, 150)
         clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
         frame_processed = clahe.apply(frame_y_bilateral)
         return frame_processed
-    if setting == 1:
-        # Convert the frame to grayscale
-        gray = cv2.cvtColor(frame_raw, cv2.COLOR_BGR2GRAY)
-        return gray
+    if setting == 2:
+        # Convert the frame to RGB
+        rgb = cv2.cvtColor(frame_raw, cv2.COLOR_BGR2RGB)
+        return rgb
 
 def gen_frames():
+    global camera_mode
     try:
         while True:
             frame_raw = feeder.picam.camera.capture_array()
             # TODO: Configurable rotation
             frame_raw = cv2.rotate(frame_raw, cv2.ROTATE_90_COUNTERCLOCKWISE)
-            frame_processed = processFrame(frame_raw, 0)
+            frame_processed = processFrame(frame_raw, camera_mode)
             # Convert the rotated frame to a JPEG image
             _, jpeg = cv2.imencode('.jpg', frame_processed)
             frame = jpeg.tobytes()
@@ -255,6 +260,23 @@ def manualFeed():
     else:
         return Response("error", status=500)
     
+@app.route("/api/toggleCamera", methods=['POST'])
+@login_required
+def toggleCamera():
+    if request.method == 'POST':
+        if feeder.picam is None:
+            # Return an error message
+            return Response("camera not found", status=500)
+        global camera_mode
+        if camera_mode + 1 > 2:
+            camera_mode = 0
+        else:
+            camera_mode += 1
+        print(camera_mode)
+        return Response("success", status=200)
+    else:
+        return Response("error", status=500)
+
 @app.route("/api/addFeedTime", methods=['POST'])
 @login_required
 def addFeedTime():

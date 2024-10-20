@@ -295,6 +295,22 @@ async function feed()
     }
 }
 
+async function toggleCamera()
+{
+    const camToggleButton = document.getElementById("cam-toggle-button");
+    const url = base_url + "/api/toggleCamera"
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    });
+    if (response.status === 200) {
+        console.log("Camera toggled");
+    }
+
+}
+
 /**
  * This function is called when the user clicks on the "Fetch" button in the schedule feeds section.
  * It clears the schedule feeds list children, and then fetches the feed times from the server.
