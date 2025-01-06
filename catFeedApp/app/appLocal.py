@@ -20,8 +20,37 @@ upcomingFeedsString = ""
 pastFeedsString = ""
 
 class TaskManager:
-    # Initializes the TaskManager instance, setting up an empty task dictionary, a lock for thread safety, and a tick rate.
+    """
+    The TaskManager class is responsible for scheduling tasks (functions) to run at regular intervals (using threads) 
+    and starting, stopping and managing their execution.
+    
+    Attributes:
+        tasks (dict): A dictionary to store the tasks and their associated information.
+        lock (threading.Lock): A lock to ensure thread safety when accessing the tasks dictionary.
+        tickrate (int): The rate at which the tasks are executed (in seconds).
+        last_tick (float): The time at which the last tick occurred.
+        run_tasks (bool): A flag indicating whether the tasks should be run.
+        stop_tasks (bool): A flag indicating whether the tasks should be stopped.
+        queue (list): A list to store tasks that need to be scheduled.
+
+    Methods:
+        __init__(): Initializes the TaskManager instance.
+        register_task(name, func, interval): Registers a new task with a given name, function, and interval.
+        _schedule_task(name, func, interval): Schedules a task to run immediately if it's the first time, and then starts a new thread to run the task at the specified interval.
+        _start_task(name): Starts a new thread to run the task at the specified interval.
+        _run_task(name): The main function that runs the task at the specified interval, updating the last_run and next_run times as needed.
+    """
+    
     def __init__(self):
+        """
+        Initializes the TaskManager instance.
+        
+        Args:
+            None
+        
+        Returns:
+            None
+        """
         self.tasks = {}
         self.lock = threading.Lock()
         self.tickrate = 1
@@ -29,15 +58,22 @@ class TaskManager:
         self.run_tasks = False
         self.stop_tasks = False
         self.queue = []
-    # Registers a new task with a given name, function, and interval. If the task already exists, raises a ValueError.
-    def register_task(self, name, func, interval):
-        with self.lock:
-            if self.run_tasks:
-                self._schedule_task(name, func, interval)
-            else:
-                self.queue.append((name, func, interval))
-    # Schedules a task to run immediately if it's the first time, and then starts a new thread to run the task at the specified interval.
+    
     def _schedule_task(self, name, func, interval):
+        """
+        Schedules a task to run immediately if it's the first time, and then starts a new thread to run the task at the specified interval.
+        
+        Args:
+            name (str): The name of the task.
+            func (function): The function to be executed by the task.
+            interval (float): The interval at which the task should be executed (in seconds).
+        
+        Returns:
+            None
+            
+        Raises:
+            ValueError: If the task is already registered.
+        """
         if name in self.tasks:
             raise ValueError(f"Task '{name}' already registered")
         print(f"Registered task: {name}")
@@ -50,20 +86,44 @@ class TaskManager:
             'fStopped': False
         }
         self._start_task(name)
-    # Starts a new thread to run the task at the specified interval.
+    
     def _start_task(self, name):
-        # Run the task once to initialize the last_run and next_run times
-        task = self.tasks[name]
-        task['func']()
-        task['last_run'] = time.time()
-        task['next_run'] = time.time() + task['interval']
-        task['fStopped'] = False
-        # Start a new thread to run the task at the specified interval
-        thread = threading.Thread(target=self._run_task, args=(name,), daemon=True)
-        thread.start()
-        self.tasks[name]['thread'] = weakref.ref(thread)
-    # Runs a task in an infinite loop, sleeping until the next scheduled run time, and then executing the task function.
+        """
+        Starts a new thread to run the task at the specified interval.
+        
+        Args:
+            name (str): The name of the task.
+        
+        Returns:
+            None
+            
+        Raises:
+            ValueError: If the task is not registered.
+        """
+        with self.lock:
+            if self.tasks[name]['thread'] is None:
+                raise ValueError(f"Attempted to start task '{name}' that is not registered")
+            # Run the task once to initialize the last_run and next_run times
+            task = self.tasks[name]
+            task['func']()
+            task['last_run'] = time.time()
+            task['next_run'] = time.time() + task['interval']
+            task['fStopped'] = False
+            # Start a new thread to run the task at the specified interval
+            thread = threading.Thread(target=self._run_task, args=(name,), daemon=True)
+            thread.start()
+            self.tasks[name]['thread'] = weakref.ref(thread)
+            print(f"Started task: {name}")
     def _run_task(self, name):
+        """
+        Runs a task in an infinite loop, sleeping until the next scheduled run time, and then executing the task function.
+        
+        Args:
+            name (str): The name of the task.
+        
+        Returns:
+            None
+        """
         task = self.tasks[name]
         while True and not self.stop_tasks and not task['fStopped']:
             with self.lock:
@@ -90,8 +150,40 @@ class TaskManager:
                 'next_run': task['next_run'],
                 'thread': task['thread']() if task['thread'] else None
             }
-    # Unregisters a task, stopping its thread and removing it from the task dictionary.
+
+    def register_task(self, name, func, interval):
+        """
+        Registers a new task with a given name, function, and interval.
+        
+        Args:
+            name (str): The name of the task.
+            func (function): The function to be executed by the task.
+            interval (float): The interval at which the task should be executed (in seconds).
+        
+        Returns:
+            None
+        """
+        with self.lock:
+            if self.run_tasks:
+                try:
+                    self._schedule_task(name, func, interval)
+                    print(f"Registered task: {name} to run every {interval} seconds")
+                except ValueError:
+                    print(f"Task '{name}' already registered")
+            else:
+                self.queue.append((name, func, interval))
+                print(f"Queued task: {name}")
+    
     def unregister_task(self, name):
+        """
+        Unregisters a task, stopping its thread and removing it from the task dictionary.
+        
+        Args:
+            name (str): The name of the task to be unregistered.
+        
+        Returns:
+            None
+        """
         with self.lock:
             task = self.tasks.pop(name, None)
             if task is None:
@@ -102,14 +194,32 @@ class TaskManager:
             if thread is not None:
                 print("Stopping task thread: " + name, "thread id: " + str(thread.ident))
                 thread.join()
-    # Starts the task manager, scheduling all queued tasks and enabling task scheduling.
+    
     def start(self):
+        """
+        Starts the task manager, scheduling all queued tasks and enabling task scheduling.
+        
+        Args:
+            None
+        
+        Returns:    
+            None
+        """
         self.run_tasks = True
         while self.queue:
             name, func, interval = self.queue.pop(0)
             self._schedule_task(name, func, interval)
-    # Stops the task manager, stopping all task threads and disabling task scheduling.
+    
     def stop(self):
+        """
+        Stops the task manager, stopping all task threads and disabling task scheduling.
+        
+        Args:
+            None
+        
+        Returns:
+            None
+        """
         self.queue.clear()
         self.run_tasks = False
         self.stop_tasks = True
@@ -158,6 +268,17 @@ def checkFeedTime():
         
 def updatePastFeeds(feed_times, maxNumDisplay=3):
     # Get the three most recent feeding times
+    """
+    Updates the global variable pastFeedsString with the maxNumDisplay most recent feed times in 12 hour 
+    format with AM/PM, and the month and day of the week in 3 character format.
+
+    Args:
+        feed_times (list): A list of FeedTime objects
+        maxNumDisplay (int): The maximum number of feed times to display
+        
+    Returns:
+        None
+    """
     feed_times_display = feed_times[:maxNumDisplay]
     timesString = []
     for i in range(min(maxNumDisplay, len(feed_times_display))):
@@ -213,8 +334,9 @@ def iterateLcdPane():
     
 manager = TaskManager()
 manager.register_task('checkFeedTime', checkFeedTime, FEED_TIME_UPDATE_RATE_SECONDS)
-feeder.display.registerPane('upcomingFeeds', [[' ' for i in range(feeder.display.LCD_WIDTH)] for j in range(feeder.display.LCD_HEIGHT)])
-manager.register_task('updateUpcomingFeedsPane', updateUpcomingFeedsPane, LCD_UPDATE_RATE_SECONDS)
-feeder.display.registerPane('pastFeeds', [[' ' for i in range(feeder.display.LCD_WIDTH)] for j in range(feeder.display.LCD_HEIGHT)])
-manager.register_task('updatePastFeedsPane', updatePastFeedsPane, LCD_UPDATE_RATE_SECONDS)
-manager.register_task('iterateLcdPane', iterateLcdPane, LCD_ITERATE_PANES_RATE_SECONDS)
+if feeder.hardwareEnabled['display']:
+    feeder.display.registerPane('upcomingFeeds', [[' ' for i in range(feeder.display.LCD_WIDTH)] for j in range(feeder.display.LCD_HEIGHT)])
+    manager.register_task('updateUpcomingFeedsPane', updateUpcomingFeedsPane, LCD_UPDATE_RATE_SECONDS)
+    feeder.display.registerPane('pastFeeds', [[' ' for i in range(feeder.display.LCD_WIDTH)] for j in range(feeder.display.LCD_HEIGHT)])
+    manager.register_task('updatePastFeedsPane', updatePastFeedsPane, LCD_UPDATE_RATE_SECONDS)
+    manager.register_task('iterateLcdPane', iterateLcdPane, LCD_ITERATE_PANES_RATE_SECONDS)

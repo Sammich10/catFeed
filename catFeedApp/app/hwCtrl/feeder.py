@@ -23,10 +23,20 @@ class CatFeeder:
             "picam" : False,
             "foodsens" : False
         }
+        self.hardwareEnabled = {
+            "display" : False,
+            "motor" : False,            
+            "picam" : False,
+            "foodsens" : False
+        }
           
     def setupHardware(self):
         self.hardwareConfigured = True
         exceptions = []
+        self.hardwareEnabled["display"] = hwConfig.HW_ENABLE["DISPLAY"]
+        self.hardwareEnabled["motor"] = hwConfig.HW_ENABLE["MOTOR"]
+        self.hardwareEnabled["picam"] = hwConfig.HW_ENABLE["CAMERA"]
+        self.hardwareEnabled["foodsens"] = hwConfig.HW_ENABLE["DSENS"]
         try:
             self.display = CharLCD(address = hwConfig.LCD["LCD_I2C_ADDR"], height = hwConfig.LCD["ROWS"], width = hwConfig.LCD["COLS"])
         except Exception as e:
@@ -106,16 +116,16 @@ class CatFeeder:
             if not success:
                 for exceptions in exceptions:
                     print("Warning, could not configure hardware: " + str(exceptions))
-        if not self.hardwareInitialized["display"]:
+        if not self.hardwareInitialized["display"] and self.hardwareEnabled["display"]:
             self.initializeDisplay()
             self.hardwareInitialized["display"] = True
-        if not self.hardwareInitialized["motor"]:
+        if not self.hardwareInitialized["motor"] and self.hardwareEnabled["motor"]:
             self.initializeMotor()
             self.hardwareInitialized["motor"] = True
-        if not self.hardwareInitialized["picam"]:
+        if not self.hardwareInitialized["picam"] and self.hardwareEnabled["picam"]:
             self.initializeCamera()
             self.hardwareInitialized["picam"] = True
-        if not self.hardwareInitialized["foodsens"]:
+        if not self.hardwareInitialized["foodsens"] and self.hardwareEnabled["foodsens"]:
             self.initializeDistanceSensor()
             self.hardwareInitialized["foodsens"] = True
                     
