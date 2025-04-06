@@ -85,7 +85,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         formData.append('username', username);
         formData.append('password', password);
 
-        fetch('/register', {
+        fetch('/auth/register', {
             method: 'POST',
             body: formData,
         })
