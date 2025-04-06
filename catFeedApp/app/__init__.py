@@ -52,6 +52,13 @@ def create_app():
     
     @app.route('/')
     def root():
+        """
+        Redirects the user to the login page if they are not logged in, or the home
+        page if they are.
+
+        Returns:
+            Response: The response object from the redirect.
+        """
         return redirect(url_for('auth.root'))
     
     return app

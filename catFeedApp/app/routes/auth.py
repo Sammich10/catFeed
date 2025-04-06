@@ -66,16 +66,16 @@ def login():
     """
     error=None
     if request.method == 'POST':
-        validUser = checkUser(request.form['username'], request.form['password'])
-        if validUser:
-            error = 'Invalid Credentials. Please try again.'
+        validate = validateLogin(request.form['username'], request.form['password'])
+        if not validate[0]:
+            error = validate[1]
         else:
             session['logged-in'] = True
             session['username'] = request.form['username']
             return redirect(url_for('catfeedapp.home'))
     return render_template('auth/login.html', error=error)
 
-def checkUser(username, password):
+def validateLogin(username, password):
     """
     Checks if a user with the given username and password exists in the database.
 
@@ -86,10 +86,15 @@ def checkUser(username, password):
     Returns:
         True if the user exists in the database, False otherwise.
     """
-    passwordHash = generate_password_hash(password)
-    if Owner.query.filter(Owner.username==username, Owner.password==passwordHash).first():
-        return True
-    return False
+    # Check if the user exists
+    user = Owner.query.filter(Owner.username==username).first()
+    if user is None:
+        return (False, "User does not exist")
+    # Check if the password is correct
+    if not check_password_hash(user.password, password):
+        return (False, "Password is incorrect")
+    # User exists and password is correct
+    return (True, "Success")
 
 @bp.route("/register", methods=['GET','POST'])
 def register():
@@ -136,8 +141,9 @@ def register():
                 session['username'] = username
                 return redirect(url_for('catfeedapp.home'))
         # Some error occurred, return the error
-        resp = {'success': False, 'errors': err, 'info': None}
-        return jsonify(resp)
+        # resp = {'success': False, 'errors': err, 'info': None}
+        # return jsonify(resp)
+        return render_template('auth/register.html', error=err)
     return render_template('auth/register.html')
 
 # Route for logging out

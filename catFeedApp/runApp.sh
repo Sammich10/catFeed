@@ -15,4 +15,9 @@ if [ "$running" != "active" ]; then
     fi
 fi
 
+if [[ "${VIRTUAL_ENV}" != "${CATFEEDAPP_DIR}/.venv" ]]; then
+    echo "Activating virtual environment..."
+    . "${CATFEEDAPP_DIR}/.venv/bin/activate"
+fi
+
 python3 run.py

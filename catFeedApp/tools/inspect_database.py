@@ -5,7 +5,10 @@ import sys
 # Add the parent directory to the system path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from app import app, db
+from app import create_app, get_db
+
+app = create_app()
+db = get_db()
 
 if os.path.exists('app/catFeed.db'):
     with app.app_context():
