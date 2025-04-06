@@ -102,7 +102,7 @@ class TaskManager:
         """
         with self.lock:
             if self.tasks[name]['thread'] is None:
-                raise ValueError(f"Attempted to start task '{name}' that is not registered")
+                raise ValueError(f"Attempted to start task '{str(name)}' that is not registered")
             # Run the task once to initialize the last_run and next_run times
             task = self.tasks[name]
             task['func']()
