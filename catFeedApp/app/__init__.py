@@ -1,29 +1,23 @@
-"""
-Initialization of the Flask application
-"""
-
-# Flask application imports
+# Import Flask application modules
 from flask import Flask, Blueprint, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-# from flask_login import LoginManager
-# Import the CatFeeder class
+
+# Import the Cat Feeder hardware and configuration
 from hardware import charLCD, DCMotor, distanceSensor, PiCam
 from app.configuration import HardwareConfig as hwConfig
 from app.configuration import BaseConfig as appConfig
-
-import atexit
 
 # Import some system modules
 import os
 
 # Global app runtime variable(s)
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-db = SQLAlchemy()
-cam = None
-motor = None
-distSensor = None
-disp = None
+BASE_DIR    = os.path.dirname(os.path.abspath(__file__))
+db          = SQLAlchemy()
+cam         = None
+motor       = None
+distSensor  = None
+disp        = None
 
 def create_app():
     """
@@ -40,10 +34,6 @@ def create_app():
     
     db.init_app(app)
     migrate = Migrate(app, db)
-    
-    # If this is the first time the app is being run, initialize the hardware
-    if os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
-        initialize_hardware() 
     
     from .routes import auth, catfeedapp, api
     app.register_blueprint(auth.bp)
@@ -150,6 +140,17 @@ def initialize_hardware():
     else:
         disp = None
         print("Display hardware not enabled.")
+        
+def start_screen():
+    """
+    Configures and starts APScheduler tasks to update the display content
+    
+    Args:
+        None
+    
+    Returns:
+        None
+    """
 
 def shutdown_hardware():
     """
@@ -162,8 +163,8 @@ def shutdown_hardware():
     Returns:
         None
     """
-    
     if cam is not None:
         cam.cleanup()
-
-atexit.register(shutdown_hardware)
+    
+    if disp is not None:
+        disp.clearScreen()

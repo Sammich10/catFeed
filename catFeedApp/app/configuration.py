@@ -51,3 +51,12 @@ class DatabaseConfig:
     # Define database parameters
     DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'catFeed.db')
     DB_NAME = 'catFeed.db'
+    
+class TaskConfig:
+    """
+    Task configuration class
+    """
+    FEED_TIMEOUT_SECONDS = 60
+    LCD_UPDATE_RATE_SECONDS = 10
+    LCD_ITERATE_PANES_RATE_SECONDS = 20
+    FEED_TIME_UPDATE_RATE_SECONDS = 15

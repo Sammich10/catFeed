@@ -211,9 +211,6 @@ class CharLCD:
             self._lcd_set_cursor(col, row)
             self._lcd_send_char(ord(char))
         
-    def _clear(self):
-        self._lcd_clear()
-    
     def _writeScreen(self, array):
         self._clear()
         for i in range(min(self.LCD_HEIGHT, len(array))):
@@ -250,6 +247,20 @@ class CharLCD:
         except Exception as e:
             raise RuntimeError(e)
         self.initialized = True
+        
+    def clearScreen(self):
+        """
+        Clears the LCD display by writing spaces to all positions on the LCD and then
+        setting the cursor to the home position (0, 0).
+        
+        Args:
+            None
+            
+        Returns:
+            None
+        """
+        self._lcd_clear()
+    
             
     # LCD constants
     LCD_BACKLIGHT = 0x08
