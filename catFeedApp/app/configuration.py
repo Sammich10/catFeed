@@ -38,7 +38,7 @@ class HardwareConfig:
     }
     # Define hardware enablement
     HW_ENABLE = {
-        "DISPLAY" : False,
+        "DISPLAY" : True,
         "CAMERA" : True,
         "MOTOR" : True,
         "DSENS" : False

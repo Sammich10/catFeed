@@ -15,7 +15,7 @@
 
 ## General Information
 
-This project was originally born as a group project for an embedded systems class, and after the semester ended I decided to try and build a new one that I could keep and actually use to feed my two cats. The project has undergone numerous revamps and periods of inactivity, but has slowly developed into what it is now:
+The implementation of the catFeed web application for interacting with, controlling, and programming the Raspberry Pi powered cat feeder device.
 
 #### Feeder Chasis
 
@@ -30,6 +30,7 @@ Electronic component info here
 - Flask Web Application Framework
 - Apache HTTP server
 - SQLite3 Database
+- Various Python libraries for interfacing with Raspberry Pi hardware
 
 ## Features
 
@@ -51,5 +52,5 @@ Active
 
 ## Feature Wish List
 
-- PiCamera No-IR camera color control (B&W?)
-- More feeder status information on LCD
+- Security improvements
+- Task Scheduling (LCD screen updates, scheduled feedings) with scheduler library
