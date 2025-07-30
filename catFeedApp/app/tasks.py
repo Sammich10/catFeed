@@ -1,32 +1,48 @@
+# Import third-party scheduler modules
+import apscheduler
 import apscheduler.schedulers
 import apscheduler.schedulers.background
-from app import get_db, get_distance_sensor, get_display
+# Import flask modules
+from flask_sqlalchemy import SQLAlchemy
+# Import app modules
+from app.access.access import get_display
 from app.configuration import TaskConfig
-import apscheduler
 from app.models import Feeding, FeedTime
+from app import create_app, get_db
+# Import system modules
 import time
 import datetime
 import threading
 import weakref
 
+db  = get_db()
+
 def create_display_task(interval):
+    print("Creating display task with interval " + str(interval) + " seconds")
     scheduler = apscheduler.schedulers.background.BackgroundScheduler()
-    scheduler.add_j
+    scheduler.add_job(refresh_display, 'interval', seconds=interval)
+    scheduler.start()
     
 def refresh_display():
+    print("Refreshing display")
     display = get_display()
     display.clearScreen()
     times = get_feed_times(3)    
     string = ["Upcoming Feeds:"] + times
-    for i in range(len(display)):
+    for i in range(len(times)):
         display._writeRow(i, string[i])
     
-def get_feed_times(num=3):
+def get_feed_times(num=3): 
     # Query all the upcoming feed times from the database
-    feed_times = FeedTime.query.all()
+    feed_times = None
+    app = create_app()
+    with app.app_context():
+        feed_times = db.session.query(FeedTime).all()
+        db.session.close()
+    if len(feed_times) == 0:
+        return ["None"]
     # Sort the feed times by the closest upcoming feeds from the current time
-    feed_times = feed_times.order_by(FeedTime.time).all()
-    print("Queried Fede Times" + str(feed_times))
+    print("Queried feed Times" + str(feed_times))
     timeNow = datetime.datetime.now().strftime("%H:%M")
     # Get the feeding times that precede the current time
     feed_times_past = [ft for ft in feed_times if ft.time < timeNow]

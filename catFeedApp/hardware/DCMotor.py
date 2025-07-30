@@ -1,7 +1,12 @@
-import time
-import pigpio
+"""
+This module is used to control the DC motor using the Raspberry Pi's GPIO pins
+"""
 
-# Define the DCMotor class, which will be used to control the motor
+# Import the pigpio library for GPIO control
+import pigpio
+# Import sleep for delay
+from time import sleep
+
 class DCMotor:
     def __init__(self, en_1_pin = 19, en_2_pin = 26):
         """
@@ -18,6 +23,7 @@ class DCMotor:
         """
         self.en1 = en_1_pin
         self.en2 = en_2_pin
+        self.rpi = pigpio.pi()
         self.initialized = False
 
     def initialize(self):
@@ -34,15 +40,18 @@ class DCMotor:
             RuntimeError if the GPIO pins cannot be set to output mode.
         """
         try:
+            # Initialize the GPIO pins as outputs
             self.rpi.set_mode(self.en1, pigpio.OUTPUT)
             self.rpi.set_mode(self.en2, pigpio.OUTPUT)
+            # Set both enable signals (EN1 and EN2) to low
+            self.rpi.write(self.en1, 0)
+            self.rpi.write(self.en2, 0)  
         except Exception as e:
             print("Error initializing motor GPIO pins: " + str(e))
             raise e
-        self.setup()
         self.initialized = True
         
-    def forward(self,t):
+    def _forward(self,t):
         """
         Runs the motor in the forward direction for a specified duration
         
@@ -52,10 +61,10 @@ class DCMotor:
         """
         self.rpi.write(self.en1, 1)
         self.rpi.write(self.en2, 0)
-        time.sleep(t)
+        sleep(t)
         self.rpi.write(self.en1, 0)
         
-    def backward(self,t):
+    def _backward(self,t):
         """
         Runs the motor in the backward direction for a specified duration
 
@@ -68,21 +77,7 @@ class DCMotor:
         """
         self.rpi.write(self.en1, 0)
         self.rpi.write(self.en2, 1)
-        time.sleep(t)
-        self.rpi.write(self.en2, 0)
-        
-    def setup(self):
-        """
-        Sets both enable signals (EN1 and EN2) to low
-        
-        Args:
-            None
-            
-        Returns:
-            None
-        """
-        self.rpi.write(self.en1, 0)
-        self.rpi.write(self.en2, 0)        
+        sleep(t)
+        self.rpi.write(self.en2, 0)              
 
-    rpi = pigpio.pi()
     

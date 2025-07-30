@@ -1,6 +1,11 @@
+"""
+This module is used to control the character LCD using the Raspberry Pi's I2C interface
+"""
+
+# Import smbus2 for I2C interface
 from smbus2 import SMBus
+# Import sleep for delay
 from time import sleep
-import threading
 
 class CharLCD:
     """
@@ -188,33 +193,89 @@ class CharLCD:
         
     def _writeRow(self, row, string):
         # If the string is too long, truncate it
+        """
+        Write a string to the LCD at the given row
+        
+        If the string is too long, it is truncated to fit the LCD width.
+        
+        Parameters:
+            row
+                The row to write the string to (0-3)
+            string
+                The string to write to the LCD
+        Returns:
+            None
+        """
         if len(string) > self.LCD_WIDTH:
             string = string[:self.LCD_WIDTH]
         if len(string) == 0:
             return
         self._lcd_set_cursor(0, row)
         # Place the string in the buffer
-        self.screen_buffer[row] = string
         self._lcd_write_string(string)
         
     def _writeStringToPos(self, col, row, string):
+        """
+        Write a string to the LCD at the given position
+        
+        If the string is too long, it is truncated to fit the LCD width.
+        
+        Parameter:
+            col
+                The column to write the string to (0-20)
+            row
+                The row to write the string to (0-3)
+            string
+                The string to write to the LCD
+        Returns:
+            None
+        """
         self._lcd_set_cursor(col, row)
         # If the string is too long, truncate it
         if len(string) > self.LCD_WIDTH - col:
             string = string[:self.LCD_WIDTH - col]
         # Place the string in the buffer
-        self.screen_buffer[row][col] = string
         self._lcd_write_string(string)
         
     def _writeCharToPos(self, col, row, char):
+        """
+        Write a single character to a specified position on the LCD.
+
+        If the specified column and row are within the LCD dimensions, the cursor
+        is set to that position and the character is sent to the display.
+
+        Parameters:
+            col
+                The column to write the character to (0-indexed).
+            row
+                The row to write the character to (0-indexed).
+            char
+                The character to write to the LCD.
+
+        Returns:
+            None
+        """
         if(col > self.LCD_WIDTH - 1) and (row > self.LCD_HEIGHT - 1):
             self._lcd_set_cursor(col, row)
             self._lcd_send_char(ord(char))
         
     def _writeScreen(self, array):
+        """
+        Writes an array of strings to the LCD screen, clearing it first.
+
+        Each string in the array is written to a separate row on the LCD.
+        The number of rows written is determined by the smaller of the 
+        LCD's height or the length of the array.
+
+        Args:
+            array (list of str): The array of strings to write to the LCD. 
+                Each string is written to a separate row.
+                
+        Returns:
+            None
+        """
         self._clear()
         for i in range(min(self.LCD_HEIGHT, len(array))):
-            self.screen_buffer[i] = array[i]
             self._writeRow(i, array[i])
     
     def initialize(self):
@@ -260,55 +321,66 @@ class CharLCD:
             None
         """
         self._lcd_clear()
+        
+    def setScreenState(self, state: bool):
+        """
+        Sets the state of the LCD display.
+        
+        Args:
+            state (bool): True to enable the display, False to disable it.
+            
+        Returns:
+            None
+        """
+        if state:
+            self.enableScreen()
+        else:
+            self.disableScreen()
     
             
     # LCD constants
-    LCD_BACKLIGHT = 0x08
+    LCD_BACKLIGHT   = 0x08
     LCD_NOBACKLIGHT = 0x00
 
     # Timing constants
-    E_PULSE = 0.0005                    # Duration of the enable pulse in seconds
-    E_DELAY = 0.0005                    # Delay between enable pulses in seconds
+    E_PULSE             = 0.0005    # Duration of the enable pulse in seconds
+    E_DELAY             = 0.0005    # Delay between enable pulses in seconds
 
     # LCD Commands
-    LCD_CLEARDISPLAY = 0x01             # Clear display
-    LCD_RETURNHOME = 0x02               # Return cursor to home position (0,0)
-    LCD_ENTRYMODESET = 0x04             # Set entry mode
-    LCD_DISPLAYCONTROL = 0x08           # Control display on/off and cursor blink
-    LCD_CURSORSHIFT = 0x10              # Shift cursor
-    LCD_FUNCTIONSET = 0x20              # Set function of display
-    LCD_SETCGRAMADDR = 0x40             # Set character generator RAM address
-    LCD_SETDDRAMADDR = 0x80             # Set data DRAM address
+    LCD_CLEARDISPLAY    = 0x01 # Clear display
+    LCD_RETURNHOME      = 0x02 # Return cursor to home position (0,0)
+    LCD_ENTRYMODESET    = 0x04 # Set entry mode
+    LCD_DISPLAYCONTROL  = 0x08 # Control display on/off and cursor blink
+    LCD_CURSORSHIFT     = 0x10 # Shift cursor
+    LCD_FUNCTIONSET     = 0x20 # Set function of display
+    LCD_SETCGRAMADDR    = 0x40 # Set character generator RAM address
+    LCD_SETDDRAMADDR    = 0x80 # Set data DRAM address
 
     # Flags for display entry mode
-    LCD_ENTRYRIGHT = 0x00
-    LCD_ENTRYLEFT = 0x02
-    LCD_ENTRYSHIFTINCREMENT = 0x01
-    LCD_ENTRYSHIFTDECREMENT = 0x00
+    LCD_ENTRYRIGHT          = 0x00  # Right-to-left text
+    LCD_ENTRYLEFT           = 0x02  # Left-to-right text
+    LCD_ENTRYSHIFTINCREMENT = 0x01  # Shift cursor
+    LCD_ENTRYSHIFTDECREMENT = 0x00  # No shift
 
     # Flags for display on/off control
-    LCD_DISPLAYON = 0x04
-    LCD_DISPLAYOFF = 0x00
-    LCD_CURSORON = 0x02
-    LCD_CURSOROFF = 0x00
-    LCD_BLINKON = 0x01
-    LCD_BLINKOFF = 0x00
+    LCD_DISPLAYON       = 0x04 # Display on
+    LCD_DISPLAYOFF      = 0x00 # Display off
+    LCD_CURSORON        = 0x02 # Cursor on
+    LCD_CURSOROFF       = 0x00 # Cursor off
+    LCD_BLINKON         = 0x01 # Blink on
+    LCD_BLINKOFF        = 0x00 # Blink off
 
     # Flags for function set
-    LCD_8BITMODE = 0x10
-    LCD_4BITMODE = 0x00
-    LCD_2LINE = 0x08
-    LCD_1LINE = 0x00
-    LCD_5x10DOTS = 0x04
-    LCD_5x8DOTS = 0x00
-    
-    # Class operational modes
-    PANE_VIEW_MODE = 0
-    SLIDE_VIEW_MODE = 1
+    LCD_8BITMODE        = 0x10 # 8-bit mode
+    LCD_4BITMODE        = 0x00 # 4-bit mode
+    LCD_2LINE           = 0x08 # 2-line display
+    LCD_1LINE           = 0x00 # 1-line display
+    LCD_5x10DOTS        = 0x04 # 5x10 font
+    LCD_5x8DOTS         = 0x00 # 5x8 font
     
     # Class variables and constants
-    LCD_WIDTH = 20
-    LCD_HEIGHT = 4
+    LCD_WIDTH   = 20
+    LCD_HEIGHT  = 4
     
     ROW_OFFSETS = [0x00, 0x40, 0x14, 0x54]
     

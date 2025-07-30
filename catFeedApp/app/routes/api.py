@@ -2,7 +2,8 @@ from flask import(
     Blueprint, Flask, render_template, Response, request, jsonify, redirect, url_for, session
 )
 from functools import wraps
-from app import get_db, get_camera, get_motor, get_distance_sensor
+from app import get_db
+from app.access.access import get_camera, get_motor, get_distance_sensor
 from .auth import login_required
 from app.models import Feeding, FeedTime
 import time, threading, cv2
